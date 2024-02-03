@@ -23,8 +23,10 @@ class ControlPoint : public BaseSystem
 
 public:
 	ControlPoint( const std::string& name );
-	virtual void getState( double *p );
-	virtual void setState( double  *p );
+	virtual void getPos( double *p );
+	virtual void setPos( double  *p );
+	virtual void getTan( double  *p );
+	virtual void setTan( double  *p );
 	void reset( double time );
 
 	void display( GLenum mode = GL_RENDER );
@@ -35,6 +37,7 @@ public:
 
 protected:
 	Vector m_pos ;
+	Vector tangent; 
 
 	GLMmodel m_model ;
 

@@ -1,18 +1,13 @@
 #include "Spline.h"
 
-Spline::Spline( const std::string& name, int numPoints ):
-	BaseSystem( name ),
-	m_sx( 1.0f ),
-	m_sy( 1.0f ),
-	m_sz( 1.0f ),
-	numPoints( numPoints )
-{ 
-
-	for (size_t i = 0; i < numPoints; ++i) {
-		setVector(points[i],  static_cast<double>(rand() % 1000),  static_cast<float>(rand() % 1000),  static_cast<float>(rand() % 1000));
-	}
-	
-}	// Spline
+Spline::Spline(const std::string& name) :
+	BaseSystem(name),
+	m_sx(1.0f),
+	m_sy(1.0f),
+	m_sz(1.0f),
+	numPoints(0),
+	points() { 
+}
 
 
 bool Spline::checkColinear() {
@@ -31,19 +26,22 @@ bool Spline::checkColinear() {
 	return false;
 }
 
-int Spline::setTangent(int index, double x, double y, double z) {
-	if (index < 0 || index >= numPoints) {
-		return TCL_ERROR; // Invalid index
-	}
+int Spline::setTangent(ControlPoint a, ControlPoint b ) {
+	Vector pos_A, pos_B;
+	a.getTan(pos_A);
+	b.getTan(pos_B);
+	Vector tangent;
+	VecSubtract(pos_A, pos_B, tangent);
+	a.setTan(tangent);
+	b.setTan(tangent);
 
-	m_tangent[index][0] = x;
-	m_tangent[index][1] = y;
-	m_tangent[index][2] = z;
-
-	// Update the model after modifying tangents
-	updateModel();
 
 	return TCL_OK;
+}
+
+void Spline::reset(double time) {
+	points.clear();
+	numPoints = 0;
 }
 
 
@@ -84,21 +82,52 @@ int Spline::command(int argc, myCONST_SPEC char **argv)
 
 		}
 	}
-	else if( strcmp(argv[0], "pos") == 0 )
-	{
-		if( argc == 4 )
+	else if (strcmp(argv[1], "set") == 0  && strcmp(argv[2], "point") == 0) {
+		if( argc == 6 )
 		{
-			points[atof(argv[1])][0] = atof(argv[2]) ;
-			points[atof(argv[1])][0] = atof(argv[2]) ;
-			points[atof(argv[1])][2] = atof(argv[4]);
+			Vector new_pos;
+			setVector(new_pos, atof(argv[4]), atof(argv[5]), atof(argv[6]));
+			points[atof(argv[3])].setPos(new_pos) ;
 		}
 		else
 		{
-			animTcl::OutputMessage("Usage: pos <i> <x> <y> <z> ") ;
+			animTcl::OutputMessage("Usage: <name> set point <index> <x y z>") ;
+			return TCL_ERROR ;
+
+		}
+	} 
+	else if (strcmp(argv[1], "set") == 0  && strcmp(argv[2], "tangent") == 0) {
+		if( argc == 7 )
+		{
+			Vector new_tan;
+			setVector(new_tan, atof(argv[4]), atof(argv[5]), atof(argv[6]));
+			points[atof(argv[3])].setTan(new_tan) ;
+		}
+		else
+		{
+			animTcl::OutputMessage("Usage: <name> set point <index> <x y z>") ;
 			return TCL_ERROR ;
 
 		}
 	}
+	else if (strcmp(argv[1], "add") == 0  && strcmp(argv[2], "point") == 0) {
+		if( argc == 9 )
+		{
+			Vector new_pos;
+			Vector new_tan;
+			ControlPoint new_point("Default");
+			setVector(new_pos, atof(argv[4]), atof(argv[5]), atof(argv[6]));
+			setVector(new_pos, atof(argv[7]), atof(argv[8]), atof(argv[9]));
+			points.push_back(new_point);
+		}
+		else
+		{
+			animTcl::OutputMessage("Usage: <name> set point <index> <x y z>") ;
+			return TCL_ERROR ;
+
+		}
+	}
+
 	else if( strcmp(argv[0], "flipNormals") == 0 )
 	{
 		flipNormals() ;
@@ -107,8 +136,7 @@ int Spline::command(int argc, myCONST_SPEC char **argv)
 	}
 	else if( strcmp(argv[0], "reset") == 0)
 	{
-		double p[3] = {0,0,0} ;
-		setState(p) ;
+		reset(0);
 	}
     
     glutPostRedisplay() ;
@@ -122,7 +150,9 @@ void Spline::display( GLenum mode )
 	glMatrixMode(GL_MODELVIEW) ;
 	glPushMatrix() ;
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
-	glTranslated(points[0][0],points[0][1],points[0][2]) ;
+	Vector p;
+	points[0].getPos(p);
+	glTranslated(p[0],p[1],p[2]) ;
 	glScalef(m_sx,m_sy,m_sz) ;
 
 	if( m_model.numvertices > 0 )
@@ -134,3 +164,4 @@ void Spline::display( GLenum mode )
 	glPopAttrib();
 
 }	// Spline::display
+

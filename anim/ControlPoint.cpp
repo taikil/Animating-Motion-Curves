@@ -1,36 +1,53 @@
-#include "SampleParticle.h"
+#include "ControlPoint.h"
 
-SampleParticle::SampleParticle( const std::string& name ):
+ControlPoint::ControlPoint( const std::string& name ):
 	BaseSystem( name )
 { 
 
 	setVector( m_pos, 0, 0, 0 );
+	setVector(tangent, 0, 0, 0);
 	
-}	// SampleParticle
+}	// ControlPoint
 
-void SampleParticle::getState( double* p )
+void ControlPoint::getPos( double* p )
 { 
 
 	VecCopy( p, m_pos ); 
 
-}	// SampleParticle::getState
+}	// ControlPoint::getState
 
-void SampleParticle::setState( double  *p )
+void ControlPoint::getTan( double* p )
+{ 
+
+	VecCopy( p, tangent); 
+
+}	// ControlPoint::getState
+
+void ControlPoint::setPos( double  *p )
 { 
 
 	VecCopy(m_pos,p); 
 
-}	// SampleParticle::setState
+}	// ControlPoint::setState
 
-void SampleParticle::reset( double time ) 
+void ControlPoint::setTan( double  *p )
+{ 
+
+	VecCopy(tangent,p); 
+
+}	// ControlPoint::setState
+
+
+void ControlPoint::reset( double time ) 
 { 
 
 	setVector( m_pos, 0, 0, 0 ); 
+	setVector( tangent, 0, 0, 0 ); 
 	
-}	// SampleParticle::Reset
+}	// ControlPoint::Reset
 
 
-int SampleParticle::command(int argc, myCONST_SPEC char **argv) 
+int ControlPoint::command(int argc, myCONST_SPEC char **argv) 
 {
 	if( argc < 1 )
 	{
@@ -50,21 +67,6 @@ int SampleParticle::command(int argc, myCONST_SPEC char **argv)
 		{
 			animTcl::OutputMessage("Usage: read <file_name>") ;
 			return TCL_ERROR ;
-		}
-	}
-	else if( strcmp(argv[0], "scale") == 0 )
-	{
-		if( argc == 4 )
-		{
-			m_sx = (float)atof(argv[1]) ;
-			m_sy = (float)atof(argv[2]) ;
-			m_sz = (float)atof(argv[3]) ;
-		}
-		else
-		{
-			animTcl::OutputMessage("Usage: scale <sx> <sy> <sz> ") ;
-			return TCL_ERROR ;
-
 		}
 	}
 	else if( strcmp(argv[0], "pos") == 0 )
@@ -97,16 +99,15 @@ int SampleParticle::command(int argc, myCONST_SPEC char **argv)
     glutPostRedisplay() ;
 	return TCL_OK ;
 
-}	// SampleParticle::command
+}	// ControlPoint::command
 
-void SampleParticle::display( GLenum mode ) 
+void ControlPoint::display( GLenum mode ) 
 {
 	glEnable(GL_LIGHTING) ;
 	glMatrixMode(GL_MODELVIEW) ;
 	glPushMatrix() ;
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glTranslated(m_pos[0],m_pos[1],m_pos[2]) ;
-	glScalef(m_sx,m_sy,m_sz) ;
 
 	if( m_model.numvertices > 0 )
 		glmDraw(&m_model, GLM_SMOOTH | GLM_MATERIAL);
@@ -116,4 +117,4 @@ void SampleParticle::display( GLenum mode )
 	glPopMatrix();
 	glPopAttrib();
 
-}	// SampleParticle::display
+}	// ControlPoint::display

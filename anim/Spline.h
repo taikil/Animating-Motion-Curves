@@ -18,12 +18,10 @@ class Spline : public BaseSystem
 { 
 
 public:
-	Spline( const std::string& name, int numPoints);
-	virtual void getState( double *p, int i );
-	virtual void setState( double  *p, int i );
+	Spline( const std::string& name);
 	void reset( double time );
-	void initializeCatmullRom();
-	int setTangent(int index, double x, double y, double z);
+//	void initializeCatmullRom();
+	int setTangent(ControlPoint a, ControlPoint b );
 	bool checkColinear();
 
 	void display( GLenum mode = GL_RENDER );
