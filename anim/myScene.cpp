@@ -22,6 +22,7 @@
 #include "animTcl.h"
 #include "myScene.h"
 #include "SampleParticle.h"
+#include "Spline.h"
 #include "SampleGravitySimulator.h"
 #include "CircleSimulator.h"
 #include "OscillateSimulator.h"
@@ -100,6 +101,7 @@ void MakeScene(void)
 	// Create systems
 	SampleParticle* sphere1 = new SampleParticle( "sphere1" );
 	SampleParticle* rose1 = new SampleParticle("rose1");
+	Spline* spline1 = new Spline("hermite");
 
 	// Register systems
 	success = GlobalResourceManager::use()->addSystem( sphere1, true );
@@ -107,6 +109,9 @@ void MakeScene(void)
 	assert( success );
 	
 	success = GlobalResourceManager::use()->addSystem(rose1, true);
+	assert(success);
+
+	success = GlobalResourceManager::use()->addSystem(spline1, true);
 	assert(success);
 
 	// Create simulators
@@ -133,12 +138,16 @@ void MakeScene(void)
 
 	// retrieve the system
 	sampleSystemRetrieval = 
-		GlobalResourceManager::use()->getSystem( "sphere1" );
+		GlobalResourceManager::use()->getSystem( "hermite" );
 
 	// make sure you got it
 	assert( sampleSystemRetrieval );
 
 	sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("rose1");
+
+	assert(sampleSystemRetrieval);
+
+	sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("hermite");
 
 	assert(sampleSystemRetrieval);
 

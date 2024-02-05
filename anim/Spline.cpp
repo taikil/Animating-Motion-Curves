@@ -150,9 +150,10 @@ void Spline::display( GLenum mode )
 	glMatrixMode(GL_MODELVIEW) ;
 	glPushMatrix() ;
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
-	Vector p;
-	points[0].getPos(p);
-	glTranslated(p[0],p[1],p[2]) ;
+	//Vector p;
+	//points[0].getPos(p);
+	//glTranslated(p[0],p[1],p[2]) ;
+	glTranslated(0,0,0);
 	glScalef(m_sx,m_sy,m_sz) ;
 
 	if( m_model.numvertices > 0 )
