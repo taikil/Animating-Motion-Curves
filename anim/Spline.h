@@ -37,9 +37,7 @@ protected:
 	float m_sz;
 
 	std::vector<ControlPoint> points ;
-
-	int numPoints;
-
+ 
 	GLMmodel m_model ;
 
 } ;

@@ -147,7 +147,7 @@ void MakeScene(void)
 
 	assert(sampleSystemRetrieval);
 
-	sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("hermite");
+	sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("sphere1");
 
 	assert(sampleSystemRetrieval);
 

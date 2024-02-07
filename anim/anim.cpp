@@ -341,7 +341,8 @@ void display(void)
 	oldTime = g_globalTimer.GetElapsedTime() ;
 
 
-	glClearColor(0.2f,0.2f,1.0f,0.5f);   /* set the background colour */
+	//glClearColor(0.2f,0.2f,1.0f,0.5f);   /* set the background colour */
+	glClearColor(0.97f, 0.97f, 0.96f, 0.5f);   /* set the background colour */
 	/* OK, now clear the screen with the background colour */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
