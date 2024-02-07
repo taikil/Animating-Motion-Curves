@@ -24,7 +24,9 @@ public:
     void reset(double time);
     //    void initializeCatmullRom();
     int setTangent(ControlPoint a, ControlPoint b);
+    void Spline::addPoint(const glm::dvec3& pos, const glm::dvec3& tan);
     bool checkColinear();
+    void initHermite();
 
     void display(GLenum mode = GL_RENDER);
 

@@ -2,193 +2,225 @@
 #include "Spline.h"
 
 Spline::Spline(const std::string& name) :
-    BaseSystem(name),
-    m_sx(1.0f),
-    m_sy(1.0f),
-    m_sz(1.0f),
-    points()
+	BaseSystem(name),
+	m_sx(1.0f),
+	m_sy(1.0f),
+	m_sz(1.0f),
+	points()
 {
 }
 
 bool Spline::checkColinear()
 {
-    // Check if the control points are co-linear in 3D space
-    for (size_t i = 0; i < points.size() - 1; ++i)
-    {
-        glm::dvec3 a, b, crossProduct;
-        points[i].getPos(a);
-        points[i + 1].getPos(b);
+	// Check if the control points are co-linear in 3D space
+	for (size_t i = 0; i < points.size() - 1; ++i)
+	{
+		glm::dvec3 a, b, crossProduct;
+		points[i].getPos(a);
+		points[i + 1].getPos(b);
 
-        crossProduct = glm::cross(a, b);
+		crossProduct = glm::cross(a, b);
 
-        // If the cross product is too small, points are considered collinear
-        if (glm::length(crossProduct) < 0.001)
-        {
-            return true;
-        }
-    }
-    return false;
+		// If the cross product is too small, points are considered collinear
+		if (glm::length(crossProduct) < 0.001)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void Spline::initHermite()
+{
+	// Ensure there are at least two control points
+	if (points.size() < 2)
+	{
+		animTcl::OutputMessage("Error: Hermite spline requires at least two control points.");
+		return;
+	}
+
+
+	// Iterate over each pair of consecutive control points
+	for (size_t i = 0; i < points.size() - 1; ++i)
+	{
+		ControlPoint& p0 = points[i];
+		ControlPoint& p1 = points[i + 1];
+		setTangent(p0, p1);
+	}
+
+	// Redisplay if needed
+	glutPostRedisplay();
+}
+
+void Spline::addPoint(const glm::dvec3& pos, const glm::dvec3& tan) {
+	if (points.size() < 40) {
+		ControlPoint new_point("Default");
+		new_point.setPos(pos);
+		new_point.setTan(tan);
+		points.push_back(new_point);
+
+		// Output characteristics of the added point
+		animTcl::OutputMessage("Added Point:");
+		animTcl::OutputMessage("  Position: %.3f %.3f %.3f", pos.x, pos.y, pos.z);
+		animTcl::OutputMessage("  Tangent: %.3f %.3f %.3f", tan.x, tan.y, tan.z);
+	}
+	else {
+		animTcl::OutputMessage("Error: Maximum number of control points reached (40).");
+	}
 }
 
 int Spline::setTangent(ControlPoint a, ControlPoint b)
 {
-    glm::dvec3 pos_A, pos_B;
-    a.getTan(pos_A);
-    b.getTan(pos_B);
-    glm::dvec3 tangent = pos_B - pos_A;
-    a.setTan(tangent);
-    b.setTan(tangent);
+	glm::dvec3 pos_A, pos_B;
+	a.getTan(pos_A);
+	b.getTan(pos_B);
+	glm::dvec3 tangent = pos_B - pos_A;
+	a.setTan(tangent);
+	b.setTan(tangent);
 
-    return TCL_OK;
+	return TCL_OK;
 }
 
 void Spline::reset(double time)
 {
-    points.clear();
+	points.clear();
 }
 
 int Spline::command(int argc, myCONST_SPEC char** argv)
 {
-    if (argc < 1)
-    {
-        animTcl::OutputMessage("system %s: wrong number of params.", m_name.c_str());
-        return TCL_ERROR;
-    }
-    else if (strcmp(argv[0], "read") == 0)
-    {
-        if (argc == 2)
-        {
-            readModel(argv[1]);
-            glmFacetNormals(&m_model);
-            glmVertexNormals(&m_model, 90);
-            return TCL_OK;
-        }
-        else
-        {
-            animTcl::OutputMessage("Usage: read <file_name>");
-            return TCL_ERROR;
-        }
-    }
-    else if (strcmp(argv[0], "scale") == 0)
-    {
-        if (argc == 4)
-        {
-            m_sx = (float)atof(argv[1]);
-            m_sy = (float)atof(argv[2]);
-            m_sz = (float)atof(argv[3]);
-        }
-        else
-        {
-            animTcl::OutputMessage("Usage: scale <sx> <sy> <sz> ");
-            return TCL_ERROR;
-        }
-    }
-    else if (strcmp(argv[0], "set") == 0 && strcmp(argv[1], "point") == 0)
-    {
-        if (argc == 6)
-        {
-            glm::dvec3 new_pos;
-            int index = atoi(argv[2]);
-            if (index >= points.size())
-            {
-                animTcl::OutputMessage(" Error: Index out of range");
-                return TCL_ERROR;
-            }
-            new_pos = glm::dvec3(atof(argv[3]), atof(argv[4]), atof(argv[5]));
-            points[index].setPos(new_pos);
-        }
-        else
-        {
-            animTcl::OutputMessage("Usage: <name> set point <index> <x y z>");
-            return TCL_ERROR;
-        }
-    }
-    else if (strcmp(argv[0], "set") == 0 && strcmp(argv[1], "tangent") == 0)
-    {
-        if (argc == 6)
-        {
-            glm::dvec3 new_tan;
-            int index = atoi(argv[2]);
-            if (index >= points.size())
-            {
-                animTcl::OutputMessage(" Error: Index out of range");
-                return TCL_ERROR;
-            }
-            new_tan = glm::dvec3(atof(argv[4]), atof(argv[5]), atof(argv[6]));
-            points[index].setTan(new_tan);
-        }
-        else
-        {
-            animTcl::OutputMessage("Usage: <name> set point <index> <x y z>");
-            return TCL_ERROR;
-        }
-    }
-    else if (strcmp(argv[0], "add") == 0 && strcmp(argv[1], "point") == 0)
-    {
-        if (argc == 8)
-        {
-            glm::dvec3 new_pos, new_tan;
-            ControlPoint new_point("Default");
-            new_pos = glm::dvec3(atof(argv[2]), atof(argv[3]), atof(argv[4]));
-            new_tan = glm::dvec3(atof(argv[5]), atof(argv[6]), atof(argv[7]));
-            new_point.setPos(new_pos);
-            new_point.setTan(new_tan);
-            points.push_back(new_point);
+	if (argc < 1)
+	{
+		animTcl::OutputMessage("system %s: wrong number of params.", m_name.c_str());
+		return TCL_ERROR;
+	}
+	else if (strcmp(argv[0], "read") == 0)
+	{
+		if (argc == 2)
+		{
+			readModel(argv[1]);
+			glmFacetNormals(&m_model);
+			glmVertexNormals(&m_model, 90);
+			return TCL_OK;
+		}
+		else
+		{
+			animTcl::OutputMessage("Usage: read <file_name>");
+			return TCL_ERROR;
+		}
+	}
+	else if (strcmp(argv[0], "scale") == 0)
+	{
+		if (argc == 4)
+		{
+			m_sx = (float)atof(argv[1]);
+			m_sy = (float)atof(argv[2]);
+			m_sz = (float)atof(argv[3]);
+		}
+		else
+		{
+			animTcl::OutputMessage("Usage: scale <sx> <sy> <sz> ");
+			return TCL_ERROR;
+		}
+	}
+	else if (strcmp(argv[0], "set") == 0 && strcmp(argv[1], "point") == 0)
+	{
+		if (argc == 6)
+		{
+			glm::dvec3 new_pos;
+			int index = atoi(argv[2]);
+			if (index >= points.size())
+			{
+				animTcl::OutputMessage(" Error: Index out of range");
+				return TCL_ERROR;
+			}
+			new_pos = glm::dvec3(atof(argv[3]), atof(argv[4]), atof(argv[5]));
+			points[index].setPos(new_pos);
+		}
+		else
+		{
+			animTcl::OutputMessage("Usage: <name> set point <index> <x y z>");
+			return TCL_ERROR;
+		}
+	}
+	else if (strcmp(argv[0], "set") == 0 && strcmp(argv[1], "tangent") == 0)
+	{
+		if (argc == 6)
+		{
+			glm::dvec3 new_tan;
+			int index = atoi(argv[2]);
+			if (index >= points.size())
+			{
+				animTcl::OutputMessage(" Error: Index out of range");
+				return TCL_ERROR;
+			}
+			new_tan = glm::dvec3(atof(argv[4]), atof(argv[5]), atof(argv[6]));
+			points[index].setTan(new_tan);
+		}
+		else
+		{
+			animTcl::OutputMessage("Usage: <name> set point <index> <x y z>");
+			return TCL_ERROR;
+		}
+	}
+	else if (strcmp(argv[0], "add") == 0 && strcmp(argv[1], "point") == 0)
+	{
+		if (argc == 8)
+		{
+			glm::dvec3 new_pos, new_tan;
+			ControlPoint new_point("Default");
+			new_pos = glm::dvec3(atof(argv[2]), atof(argv[3]), atof(argv[4]));
+			new_tan = glm::dvec3(atof(argv[5]), atof(argv[6]), atof(argv[7]));
+			addPoint(new_pos, new_tan);
+		}
+		else
+		{
+			animTcl::OutputMessage("Usage: <name> add point <x y z> <xt yt zt>");
+			return TCL_ERROR;
+		}
+	}
 
-            // Output characteristics of the added point
-            animTcl::OutputMessage("Added Point:");
-            animTcl::OutputMessage("  Position: %.3f %.3f %.3f", new_pos.x, new_pos.y, new_pos.z);
-            animTcl::OutputMessage("  Tangent: %.3f %.3f %.3f", new_tan.x, new_tan.y, new_tan.z);
+	else if (strcmp(argv[0], "flipNormals") == 0)
+	{
+		flipNormals();
+		return TCL_OK;
+	}
+	else if (strcmp(argv[0], "reset") == 0)
+	{
+		reset(0);
+	}
 
-        }
-        else
-        {
-            animTcl::OutputMessage("Usage: <name> add point <x y z> <xt yt zt>");
-            return TCL_ERROR;
-        }
-    }
-
-    else if (strcmp(argv[0], "flipNormals") == 0)
-    {
-        flipNormals();
-        return TCL_OK;
-    }
-    else if (strcmp(argv[0], "reset") == 0)
-    {
-        reset(0);
-    }
-
-    glutPostRedisplay();
-    return TCL_OK;
+	glutPostRedisplay();
+	return TCL_OK;
 }
 
 void Spline::display(GLenum mode)
 {
-    glEnable(GL_LIGHTING);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glEnable(GL_LIGHTING);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-    glTranslated(0, 0, 0);
-    glScalef(m_sx, m_sy, m_sz);
+	glTranslated(0, 0, 0);
+	glScalef(m_sx, m_sy, m_sz);
 
-    // Render each control point as a dot
-    glColor3f(1.0f, 0.0f, 0.0f);  // Set dot color (red in this case)
-    glPointSize(8.0f);
-    glBegin(GL_POINTS);
-    for (size_t i = 0; i < points.size(); ++i)
-    {
-        glm::dvec3 pos;
-        points[i].getPos(pos);
-        glVertex3f(pos.x, pos.y, pos.z);
-    }
-    glEnd();
+	// Render each control point as a dot
+	glPointSize(8.0f);
+	glBegin(GL_POINTS);
+	glColor3f(1.0f, 0.0f, 0.0f);  // Set dot color (red in this case)
+	for (size_t i = 0; i < points.size(); ++i)
+	{
+		glm::dvec3 pos;
+		points[i].getPos(pos);
+		glVertex3f(pos.x, pos.y, pos.z);
 
-    //if (m_model.numvertices > 0)
-    //	glmDraw(&m_model, GLM_SMOOTH | GLM_MATERIAL);
-    //else
-    //	glutSolidSphere(1.0, 20, 20);
+	}
+	glEnd();
 
-    glPopMatrix();
-    glPopAttrib();
+	//if (m_model.numvertices > 0)
+	//	glmDraw(&m_model, GLM_SMOOTH | GLM_MATERIAL);
+	//else
+		//glutSolidSphere(1.0, 20, 20);
+
+	glPopMatrix();
+	glPopAttrib();
 }
