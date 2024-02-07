@@ -105,7 +105,7 @@ void MakeScene(void)
 
 	// Register systems
 	success = GlobalResourceManager::use()->addSystem( sphere1, true );
-	// make sure it was registered successfully
+	 //make sure it was registered successfully
 	assert( success );
 	
 	success = GlobalResourceManager::use()->addSystem(rose1, true);

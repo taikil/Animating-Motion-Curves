@@ -1,45 +1,37 @@
 #ifndef CONTROL_POINT_H
-#define CONTROL_POINT_H 
-
-/*
-
-	This is a sample system. It accepts the command "read" followed by the 
-	path to an OBJ model.
-
-*/
-
+#define CONTROL_POINT_H
 
 #include "BaseSystem.h"
 #include <shared/defs.h>
 #include <util/util.h>
 #include "animTcl.h"
 #include <GLmodel/GLmodel.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "shared/opengl.h"
 
-// a sample system
 class ControlPoint : public BaseSystem
-{ 
-
+{
 public:
-	ControlPoint( const std::string& name );
-	virtual void getPos( double *p );
-	virtual void setPos( double  *p );
-	virtual void getTan( double  *p );
-	virtual void setTan( double  *p );
-	void reset( double time );
+    ControlPoint(const std::string& name);
+    virtual void getPos(glm::dvec3& pos);
+    virtual void setPos(const glm::dvec3& pos);
+    virtual void getTan(glm::dvec3& tan);
+    virtual void setTan(const glm::dvec3& tan);
+    void reset(double time);
 
-	void display( GLenum mode = GL_RENDER );
+    void display(GLenum mode = GL_RENDER);
 
-	void readModel(char *fname) { m_model.ReadOBJ(fname); }
-	void flipNormals(void) { glmReverseWinding(&m_model); }
-	int command(int argc, myCONST_SPEC char **argv) ;
+    void readModel(const char* fname);
+    int command(int argc, myCONST_SPEC char** argv);
 
 protected:
-	Vector m_pos ;
-	Vector tangent; 
+    glm::dvec3 m_pos;
+    glm::dvec3 tangent;
 
-	GLMmodel m_model ;
+    GLMmodel m_model;
+};
 
-} ;
 #endif
