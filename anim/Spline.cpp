@@ -5,6 +5,7 @@ Spline::Spline(const std::string& name) :
 	BaseSystem(name),
 	points()
 {
+	initHermite();
 }
 
 bool Spline::checkColinear()
@@ -41,9 +42,18 @@ void Spline::initHermite()
 	// Iterate over each pair of consecutive control points
 	for (size_t i = 0; i < points.size() - 1; ++i)
 	{
-		double stepSize = 1.0 / double(numSamples);
+		double stepSize = 1.0 / double(20);
 		ControlPoint& p0 = points[i];
 		ControlPoint& p1 = points[i + 1];
+		glm::dvec3 samplePoints[20];
+		//for each point, run
+		for (size_t j = 0; j < 20; j++) {
+			double t = j * stepSize;
+			samplePoints[j][0] = evaluateCurve(0, t, p0, p1);
+			samplePoints[j][1] = evaluateCurve(1, t, p0, p1);
+			samplePoints[j][2] = evaluateCurve(2, t, p0, p1);
+		}
+		points[i].setSamplePoints(samplePoints);
 
 	}
 
@@ -51,16 +61,16 @@ void Spline::initHermite()
 	glutPostRedisplay();
 }
 
-double Spline::evaluateCurve(int d, double t, ControlPoint p0, ControlPoint p1) {
+double Spline::evaluateCurve(int dimension, double t, ControlPoint p0, ControlPoint p1) {
 	glm::dvec3 pos0, pos1, tan0, tan1;
 	p0.getPos(pos0);
 	p0.getTan(tan0);
 	p1.getPos(pos1);
 	p1.getTan(tan1);
-	double a = (2 * pow(t, 3) - 3 * pow(t, 2) + 1) * pos0[d]; // (2t^3 -3t^2 + 1)y0
-	double b = (-2 * pow(t, 3) + 3 * pow(t, 2)) * pos1[d]; // (-2t^3 + 3t^2)y1
-	double c = (pow(t, 3) - 2 * pow(t, 2) + t) * tan0[d]; // (t^3 - 2t^2+ t)s0
-	double d = (pow(t, 3) - pow(t, 2)) * tan1[d]; // (t^3 - t^2)s1
+	double a = (2 * pow(t, 3) - 3 * pow(t, 2) + 1) * pos0[dimension]; // (2t^3 -3t^2 + 1)y0
+	double b = (-2 * pow(t, 3) + 3 * pow(t, 2)) * pos1[dimension]; // (-2t^3 + 3t^2)y1
+	double c = (pow(t, 3) - 2 * pow(t, 2) + t) * tan0[dimension]; // (t^3 - 2t^2+ t)s0
+	double d = (pow(t, 3) - pow(t, 2)) * tan1[dimension]; // (t^3 - t^2)s1
 
 	return (a + b + c + d);
 
@@ -102,6 +112,7 @@ int Spline::setTangent(ControlPoint a, ControlPoint b)
 	glm::dvec3 tangent = pos_B - pos_A;
 	a.setTan(tangent);
 	b.setTan(tangent);
+	animTcl::OutputMessage("  New tangent: %.3f %.3f %.3f", tangent.x, tangent.y, tangent.z);
 
 	return TCL_OK;
 }
@@ -204,6 +215,34 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 	return TCL_OK;
 }
 
+void Spline::displaySampledCurve(float r) {
+	glLineWidth(r);
+	glm::dvec3 samplePoints[20];
+	glBegin(GL_LINE_STRIP);
+	for (int i = 0; i < points.size(); i++) {
+		points[i].getPoints(samplePoints);
+		for (int j = 0; i < 20; i++)
+			glVertex3f(samplePoints[j][0], samplePoints[j][1], samplePoints[j][2]);
+	}
+	glEnd();
+}
+
+void Spline::displayPoints(float r) {
+	// Render each control point as a dot
+	glPointSize(r);
+	glBegin(GL_POINTS);
+	for (size_t i = 0; i < points.size(); ++i)
+	{
+		glm::dvec3 pos;
+		points[i].getPos(pos);
+		glVertex3f(pos.x, pos.y, pos.z);
+
+	}
+	glEnd();
+
+}
+
+
 void Spline::display(GLenum mode)
 {
 	glEnable(GL_LIGHTING);
@@ -214,18 +253,11 @@ void Spline::display(GLenum mode)
 
 	glTranslated(0, 0, 0);
 
-	// Render each control point as a dot
-	glPointSize(5.0f);
-	glBegin(GL_POINTS);
 	glColor3f(1.0f, 0.0f, 0.0f);  // Set dot color
-	for (size_t i = 0; i < points.size(); ++i)
-	{
-		glm::dvec3 pos;
-		points[i].getPos(pos);
-		glVertex3f(pos.x, pos.y, pos.z);
+	displayPoints(5.0f);
 
-	}
-	glEnd();
+	glColor3f(0.3, 0.7, 0.1);
+	displaySampledCurve(1.5);
 
 	//if (m_model.numvertices > 0)
 	//	glmDraw(&m_model, GLM_SMOOTH | GLM_MATERIAL);
