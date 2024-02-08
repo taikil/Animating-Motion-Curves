@@ -3,9 +3,6 @@
 
 Spline::Spline(const std::string& name) :
 	BaseSystem(name),
-	m_sx(1.0f),
-	m_sy(1.0f),
-	m_sz(1.0f),
 	points()
 {
 }
@@ -30,6 +27,7 @@ bool Spline::checkColinear()
 	return false;
 }
 
+
 void Spline::initHermite()
 {
 	// Ensure there are at least two control points
@@ -43,13 +41,29 @@ void Spline::initHermite()
 	// Iterate over each pair of consecutive control points
 	for (size_t i = 0; i < points.size() - 1; ++i)
 	{
+		double stepSize = 1.0 / double(numSamples);
 		ControlPoint& p0 = points[i];
 		ControlPoint& p1 = points[i + 1];
-		setTangent(p0, p1);
+
 	}
 
 	// Redisplay if needed
 	glutPostRedisplay();
+}
+
+double Spline::evaluateCurve(int d, double t, ControlPoint p0, ControlPoint p1) {
+	glm::dvec3 pos0, pos1, tan0, tan1;
+	p0.getPos(pos0);
+	p0.getTan(tan0);
+	p1.getPos(pos1);
+	p1.getTan(tan1);
+	double a = (2 * pow(t, 3) - 3 * pow(t, 2) + 1) * pos0[d]; // (2t^3 -3t^2 + 1)y0
+	double b = (-2 * pow(t, 3) + 3 * pow(t, 2)) * pos1[d]; // (-2t^3 + 3t^2)y1
+	double c = (pow(t, 3) - 2 * pow(t, 2) + t) * tan0[d]; // (t^3 - 2t^2+ t)s0
+	double d = (pow(t, 3) - pow(t, 2)) * tan1[d]; // (t^3 - t^2)s1
+
+	return (a + b + c + d);
+
 }
 
 void Spline::addPoint(const glm::dvec3& pos, const glm::dvec3& tan) {
@@ -67,6 +81,17 @@ void Spline::addPoint(const glm::dvec3& pos, const glm::dvec3& tan) {
 	else {
 		animTcl::OutputMessage("Error: Maximum number of control points reached (40).");
 	}
+}
+
+void Spline::catMullRom() {
+	for (size_t i = 0; i < points.size() - 1; i++) {
+		ControlPoint& p0 = points[i];
+		ControlPoint& p1 = points[i + 1];
+		setTangent(p0, p1);
+	}
+
+	// Redisplay if needed
+	glutPostRedisplay();
 }
 
 int Spline::setTangent(ControlPoint a, ControlPoint b)
@@ -105,20 +130,6 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 		else
 		{
 			animTcl::OutputMessage("Usage: read <file_name>");
-			return TCL_ERROR;
-		}
-	}
-	else if (strcmp(argv[0], "scale") == 0)
-	{
-		if (argc == 4)
-		{
-			m_sx = (float)atof(argv[1]);
-			m_sy = (float)atof(argv[2]);
-			m_sz = (float)atof(argv[3]);
-		}
-		else
-		{
-			animTcl::OutputMessage("Usage: scale <sx> <sy> <sz> ");
 			return TCL_ERROR;
 		}
 	}
@@ -199,14 +210,14 @@ void Spline::display(GLenum mode)
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glEnable(GL_COLOR_MATERIAL);
 
 	glTranslated(0, 0, 0);
-	glScalef(m_sx, m_sy, m_sz);
 
 	// Render each control point as a dot
-	glPointSize(8.0f);
+	glPointSize(5.0f);
 	glBegin(GL_POINTS);
-	glColor3f(1.0f, 0.0f, 0.0f);  // Set dot color (red in this case)
+	glColor3f(1.0f, 0.0f, 0.0f);  // Set dot color
 	for (size_t i = 0; i < points.size(); ++i)
 	{
 		glm::dvec3 pos;

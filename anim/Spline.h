@@ -24,21 +24,20 @@ public:
     void reset(double time);
     //    void initializeCatmullRom();
     int setTangent(ControlPoint a, ControlPoint b);
+    void catMullRom() {
+
+    }
     void Spline::addPoint(const glm::dvec3& pos, const glm::dvec3& tan);
     bool checkColinear();
     void initHermite();
-
+    double evaluateCurve(int d, double t, ControlPoint p0, ControlPoint p1);
     void display(GLenum mode = GL_RENDER);
-
     void readModel(const char* fname) { m_model.ReadOBJ(fname); }
     void flipNormals(void) { glmReverseWinding(&m_model); }
     int command(int argc, myCONST_SPEC char** argv);
 
 protected:
-    float m_sx;
-    float m_sy;
-    float m_sz;
-
+    int numSamples = 40;
     std::vector<ControlPoint> points;
 
     GLMmodel m_model;
