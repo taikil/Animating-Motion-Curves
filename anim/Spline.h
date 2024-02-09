@@ -2,12 +2,14 @@
 #ifndef SPLINE_H
 #define SPLINE_H
 
+#include <windows.h>
 #include "animTcl.h"
 #include "BaseSystem.h"
 #include "ControlPoint.h"
 #include <GLmodel/GLmodel.h>
 #include <shared/defs.h>
 #include <util/util.h>
+#include <fstream>
 
 #include "shared/opengl.h"
 #include <vector>
@@ -31,6 +33,7 @@ public:
     void displaySampledCurve(float r);
     void displayPoints(float r);
     void display(GLenum mode = GL_RENDER);
+    int load(const std::string& filename);
     void readModel(const char* fname) { m_model.ReadOBJ(fname); }
     void flipNormals(void) { glmReverseWinding(&m_model); }
     int command(int argc, myCONST_SPEC char** argv);

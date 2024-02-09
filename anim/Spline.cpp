@@ -1,11 +1,9 @@
-#include <windows.h>
 #include "Spline.h"
 
 Spline::Spline(const std::string& name) :
 	BaseSystem(name),
 	points()
 {
-	initHermite();
 }
 
 bool Spline::checkColinear()
@@ -31,13 +29,13 @@ bool Spline::checkColinear()
 
 void Spline::initHermite()
 {
+	animTcl::OutputMessage("Initializing Hermite");
 	// Ensure there are at least two control points
 	if (points.size() < 2)
 	{
 		animTcl::OutputMessage("Error: Hermite spline requires at least two control points.");
 		return;
 	}
-
 
 	// Iterate over each pair of consecutive control points
 	for (size_t i = 0; i < points.size() - 1; ++i)
@@ -52,6 +50,7 @@ void Spline::initHermite()
 			samplePoints[j][0] = evaluateCurve(0, t, p0, p1);
 			samplePoints[j][1] = evaluateCurve(1, t, p0, p1);
 			samplePoints[j][2] = evaluateCurve(2, t, p0, p1);
+			animTcl::OutputMessage("Points %.3f / 20: %.3f", j, samplePoints[j][0]);
 		}
 		points[i].setSamplePoints(samplePoints);
 
@@ -122,6 +121,38 @@ void Spline::reset(double time)
 	points.clear();
 }
 
+int Spline::load(const std::string& filename)
+{
+	std::ifstream file(filename);
+	if (!file.is_open())
+	{
+		animTcl::OutputMessage("Error: Unable to open file %s for reading.", filename.c_str());
+		return TCL_ERROR;
+	}
+
+	// Clear existing points before loading
+	points.clear();
+
+	std::string splineName;
+	int numPoints;
+	file >> splineName >> numPoints;
+
+	for (int i = 0; i < numPoints; ++i)
+	{
+		glm::dvec3 new_pos, new_tan;
+		file >> new_pos.x >> new_pos.y >> new_pos.z >> new_tan.x >> new_tan.y >> new_tan.z;
+		addPoint(new_pos, new_tan);
+	}
+
+	file.close();
+	animTcl::OutputMessage("Spline loaded from %s.", filename.c_str());
+
+	initHermite();
+
+	return TCL_OK;
+}
+
+
 int Spline::command(int argc, myCONST_SPEC char** argv)
 {
 	if (argc < 1)
@@ -186,21 +217,47 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 	}
 	else if (strcmp(argv[0], "add") == 0 && strcmp(argv[1], "point") == 0)
 	{
-		if (argc == 8)
+		int numPoints = atoi(argv[2]);
+
+		// Check if the correct number of arguments is provided
+		if (argc != 3 + 6 * numPoints)
+		{
+			animTcl::OutputMessage("Usage: <name> add point <n> <p1[x] p1[y] p1[z] s1[x] s1[y] s1[z]> ... <pn[x] pn[y] pn[z] pn[x] sn[y] sn[z]>");
+			return TCL_ERROR;
+		}
+
+		for (int i = 0; i < numPoints; ++i)
 		{
 			glm::dvec3 new_pos, new_tan;
-			ControlPoint new_point("Default");
-			new_pos = glm::dvec3(atof(argv[2]), atof(argv[3]), atof(argv[4]));
-			new_tan = glm::dvec3(atof(argv[5]), atof(argv[6]), atof(argv[7]));
+
+			// Calculate the index for the current point
+			int index = points.size();
+
+			// Extract coordinates for the control point
+			new_pos = glm::dvec3(atof(argv[3 + i * 6]), atof(argv[4 + i * 6]), atof(argv[5 + i * 6]));
+
+			// Extract coordinates for the tangent
+			new_tan = glm::dvec3(atof(argv[6 + i * 6]), atof(argv[7 + i * 6]), atof(argv[8 + i * 6]));
+
+			// Add the point to the spline
 			addPoint(new_pos, new_tan);
+		}
+
+		// Output a success message
+		animTcl::OutputMessage("Added %d point(s).", numPoints);
+	}
+	else if (strcmp(argv[0], "load") == 0)
+	{
+		if (argc == 2)
+		{
+			return load(argv[1]);
 		}
 		else
 		{
-			animTcl::OutputMessage("Usage: <name> add point <x y z> <xt yt zt>");
+			animTcl::OutputMessage("Usage: system <name> load \"<file name>\"");
 			return TCL_ERROR;
 		}
 	}
-
 	else if (strcmp(argv[0], "flipNormals") == 0)
 	{
 		flipNormals();
