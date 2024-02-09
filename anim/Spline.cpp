@@ -41,8 +41,8 @@ void Spline::initHermite()
 	for (size_t i = 0; i < points.size() - 1; ++i)
 	{
 		double stepSize = 1.0 / double(20);
-		ControlPoint& p0 = points[i];
-		ControlPoint& p1 = points[i + 1];
+		ControlPoint p0 = points[i];
+		ControlPoint p1 = points[i + 1];
 		glm::dvec3 samplePoints[20];
 		//for each point, run
 		for (size_t j = 0; j < 20; j++) {
@@ -50,7 +50,7 @@ void Spline::initHermite()
 			samplePoints[j][0] = evaluateCurve(0, t, p0, p1);
 			samplePoints[j][1] = evaluateCurve(1, t, p0, p1);
 			samplePoints[j][2] = evaluateCurve(2, t, p0, p1);
-			animTcl::OutputMessage("Points %.3f / 20: %.3f", j, samplePoints[j][0]);
+			animTcl::OutputMessage("Points %.3f / 20: x: %.3f, y: %.3f", static_cast<double>(j), samplePoints[j][0], samplePoints[j][1]);
 		}
 		points[i].setSamplePoints(samplePoints);
 
@@ -278,7 +278,7 @@ void Spline::displaySampledCurve(float r) {
 	glBegin(GL_LINE_STRIP);
 	for (int i = 0; i < points.size(); i++) {
 		points[i].getPoints(samplePoints);
-		for (int j = 0; i < 20; i++)
+		for (int j = 0; j < 20; j++)
 			glVertex3f(samplePoints[j][0], samplePoints[j][1], samplePoints[j][2]);
 	}
 	glEnd();
