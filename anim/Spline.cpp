@@ -103,7 +103,7 @@ void Spline::catMullRom() {
 	glutPostRedisplay();
 }
 
-int Spline::setTangent(ControlPoint a, ControlPoint b)
+int Spline::setTangent(ControlPoint& a, ControlPoint& b)
 {
 	glm::dvec3 pos_A, pos_B;
 	a.getTan(pos_A);
@@ -120,6 +120,61 @@ void Spline::reset(double time)
 {
 	points.clear();
 }
+
+double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1, int numSamples) {
+	double stepSize = 1.0 / double(numSamples);
+	double arcLength = 0.0;
+
+	for (int i = 0; i < numSamples; ++i) {
+		double t0 = i * stepSize;
+		double t1 = (i + 1) * stepSize;
+
+		// Use a numerical integration method (e.g., trapezoidal rule)
+		double deltaS = glm::length(glm::dvec3(
+			evaluateCurve(0, t1, p0, p1) - evaluateCurve(0, t0, p0, p1),
+			evaluateCurve(1, t1, p0, p1) - evaluateCurve(1, t0, p0, p1),
+			evaluateCurve(2, t1, p0, p1) - evaluateCurve(2, t0, p0, p1)
+		));
+
+		arcLength += deltaS;
+	}
+
+	return arcLength;
+}
+
+void Spline::buildArcLengthLookupTable(int numSamples) {
+	arcLengths.clear();
+
+	for (size_t i = 0; i < points.size() - 1; ++i) {
+		double segmentLength = getArcLength(points[i], points[i + 1], numSamples);
+		double accumulatedLength = (i > 0) ? arcLengths[i - 1] : 0.0;
+
+		arcLengths.push_back(segmentLength + accumulatedLength);
+	}
+}
+
+glm::dvec3 Spline::getPointOnSpline(double parameter) {
+	// Map parameter value to arc length using the lookup table
+	double targetLength = parameter * arcLengths.back();
+
+	// Find the curve segment that contains the target arc length
+	size_t segmentIndex = 0;
+	while (segmentIndex < arcLengths.size() && arcLengths[segmentIndex] < targetLength) {
+		++segmentIndex;
+	}
+
+	// Interpolate within the segment to find the corresponding point
+	double t = (targetLength - arcLengths[segmentIndex - 1]) / (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+
+	// Use evaluateCurve to get the point
+	return glm::dvec3(
+		evaluateCurve(0, t, points[segmentIndex - 1], points[segmentIndex]),
+		evaluateCurve(1, t, points[segmentIndex - 1], points[segmentIndex]),
+		evaluateCurve(2, t, points[segmentIndex - 1], points[segmentIndex])
+	);
+}
+
+
 
 int Spline::load(const std::string& filename)
 {
@@ -175,6 +230,18 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 			return TCL_ERROR;
 		}
 	}
+	else if (strcmp(argv[0], "cr") == 0)
+	{
+		if (argc == 1) {
+			catMullRom();
+			animTcl::OutputMessage("Initializing Catmull-Rom");
+			return TCL_OK;
+		}
+		else {
+			animTcl::OutputMessage("Usage: <name> cr");
+			return TCL_ERROR;
+		}
+	}
 	else if (strcmp(argv[0], "set") == 0 && strcmp(argv[1], "point") == 0)
 	{
 		if (argc == 6)
@@ -217,34 +284,29 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 	}
 	else if (strcmp(argv[0], "add") == 0 && strcmp(argv[1], "point") == 0)
 	{
-		int numPoints = atoi(argv[2]);
-
 		// Check if the correct number of arguments is provided
-		if (argc != 3 + 6 * numPoints)
+		if (argc != 8)
 		{
 			animTcl::OutputMessage("Usage: <name> add point <n> <p1[x] p1[y] p1[z] s1[x] s1[y] s1[z]> ... <pn[x] pn[y] pn[z] pn[x] sn[y] sn[z]>");
 			return TCL_ERROR;
 		}
 
-		for (int i = 0; i < numPoints; ++i)
-		{
-			glm::dvec3 new_pos, new_tan;
+		glm::dvec3 new_pos, new_tan;
 
-			// Calculate the index for the current point
-			int index = points.size();
+		// Calculate the index for the current point
+		int index = points.size();
 
-			// Extract coordinates for the control point
-			new_pos = glm::dvec3(atof(argv[3 + i * 6]), atof(argv[4 + i * 6]), atof(argv[5 + i * 6]));
+		// Extract coordinates for the control point
+		new_pos = glm::dvec3(atof(argv[2]), atof(argv[3]), atof(argv[4]));
 
-			// Extract coordinates for the tangent
-			new_tan = glm::dvec3(atof(argv[6 + i * 6]), atof(argv[7 + i * 6]), atof(argv[8 + i * 6]));
+		// Extract coordinates for the tangent
+		new_tan = glm::dvec3(atof(argv[5]), atof(argv[6]), atof(argv[7]));
 
-			// Add the point to the spline
-			addPoint(new_pos, new_tan);
-		}
+		// Add the point to the spline
+		addPoint(new_pos, new_tan);
 
 		// Output a success message
-		animTcl::OutputMessage("Added %d point(s).", numPoints);
+		animTcl::OutputMessage("Added point");
 	}
 	else if (strcmp(argv[0], "load") == 0)
 	{
