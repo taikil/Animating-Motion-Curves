@@ -3,6 +3,7 @@
 Spline::Spline(const std::string& name) :
 	BaseSystem(name),
 	points()
+	//arcLengths()
 {
 }
 
@@ -92,6 +93,63 @@ void Spline::addPoint(const glm::dvec3& pos, const glm::dvec3& tan) {
 	}
 }
 
+double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1, int numSamples) {
+	double stepSize = 1.0 / double(numSamples);
+	double arcLength = 0.0;
+
+	for (int i = 0; i < numSamples; ++i) {
+		double t0 = i * stepSize;
+		double t1 = (i + 1) * stepSize;
+
+		// Use a numerical integration method (e.g., trapezoidal rule)
+		double deltaS = glm::length(glm::dvec3(
+			evaluateCurve(0, t1, p0, p1) - evaluateCurve(0, t0, p0, p1),
+			evaluateCurve(1, t1, p0, p1) - evaluateCurve(1, t0, p0, p1),
+			evaluateCurve(2, t1, p0, p1) - evaluateCurve(2, t0, p0, p1)
+		));
+
+		arcLength += deltaS;
+	}
+
+	return arcLength;
+}
+
+//void Spline::buildArcLengthLookupTable(int numSamples) {
+//	arcLengths.clear();
+//
+//	for (size_t i = 0; i < points.size() - 1; ++i) {
+//		double segmentLength = getArcLength(points[i], points[i + 1], numSamples);
+//		double accumulatedLength = (i > 0) ? arcLengths[i - 1] : 0.0;
+//
+//		arcLengths.push_back(segmentLength + accumulatedLength);
+//	}
+//}
+
+//glm::dvec3 Spline::getPointOnSpline(double parameter) {
+//	// Map parameter value to arc length using the lookup table
+//	double targetLength = parameter * arcLengths.back();
+//
+//	// Find the curve segment that contains the target arc length
+//	size_t segmentIndex = 0;
+//	while (segmentIndex < arcLengths.size() && arcLengths[segmentIndex] < targetLength) {
+//		++segmentIndex;
+//	}
+//
+//	// Interpolate within the segment to find the corresponding point
+//	double t = (targetLength - arcLengths[segmentIndex - 1]) / (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+//
+//	// Use evaluateCurve to get the point
+//	return glm::dvec3(
+//		evaluateCurve(0, t, points[segmentIndex - 1], points[segmentIndex]),
+//		evaluateCurve(1, t, points[segmentIndex - 1], points[segmentIndex]),
+//		evaluateCurve(2, t, points[segmentIndex - 1], points[segmentIndex])
+//	);
+//}
+
+
+
+
+
 void Spline::catMullRom() {
 	for (size_t i = 0; i < points.size() - 1; i++) {
 		ControlPoint& p0 = points[i];
@@ -103,7 +161,7 @@ void Spline::catMullRom() {
 	glutPostRedisplay();
 }
 
-int Spline::setTangent(ControlPoint a, ControlPoint b)
+int Spline::setTangent(ControlPoint& a, ControlPoint& b)
 {
 	glm::dvec3 pos_A, pos_B;
 	a.getTan(pos_A);
@@ -172,6 +230,18 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 		else
 		{
 			animTcl::OutputMessage("Usage: read <file_name>");
+			return TCL_ERROR;
+		}
+	}
+	else if (strcmp(argv[0], "cr") == 0)
+	{
+		if (argc == 1) {
+			catMullRom();
+			animTcl::OutputMessage("Initializing Catmull-Rom");
+			return TCL_OK;
+		}
+		else {
+			animTcl::OutputMessage("Usage: <name> cr");
 			return TCL_ERROR;
 		}
 	}

@@ -24,11 +24,14 @@ class Spline : public BaseSystem
 public:
     Spline(const std::string& name);
     void reset(double time);
-    int setTangent(ControlPoint a, ControlPoint b);
+    int setTangent(ControlPoint& a, ControlPoint& b);
     void catMullRom();
     void addPoint(const glm::dvec3& pos, const glm::dvec3& tan);
     bool checkColinear();
     void initHermite();
+    double getArcLength(const ControlPoint& p0, const ControlPoint& p1, int numSamples);
+    void buildArcLengthLookupTable(int numSamples);
+    glm::dvec3 getPointOnSpline(double parameter);
     double evaluateCurve(int dimension, double t, ControlPoint p0, ControlPoint p1);
     void displaySampledCurve(float r);
     void displayPoints(float r);
@@ -40,7 +43,7 @@ public:
 
 protected:
     std::vector<ControlPoint> points;
-
+    //std::vector<double> arcLengths;
     GLMmodel m_model;
 };
 
