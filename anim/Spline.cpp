@@ -2,8 +2,18 @@
 
 Spline::Spline(const std::string& name) :
 	BaseSystem(name),
-	points()
+	points(),
+	arcLengths(0)
 {
+}
+
+void Spline::getState(double* p) {
+
+}
+
+
+void Spline::setState(double* p) {
+
 }
 
 bool Spline::checkColinear()
