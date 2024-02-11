@@ -34,8 +34,9 @@ public:
 
 	void initHermite();
 	double evaluateCurve(int dimension, double t, ControlPoint p0, ControlPoint p1);
-	double getArcLength(const ControlPoint& p0, const ControlPoint& p1, int numSamples);
-	void buildArcLengthLookupTable(int numSamples);
+	double forwardDifference(double t, double h, int dimension, const ControlPoint& p0, const ControlPoint& p1);
+	double getArcLength(const ControlPoint& p0, const ControlPoint& p1);
+	void buildArcLengthLookupTable();
 	glm::dvec3 getPointOnSpline(double parameter);
 
 	void displaySampledCurve(float r);
@@ -50,6 +51,7 @@ protected:
 	std::vector<ControlPoint> points;
 	std::vector<double> arcLengths; 
 	int numPoints = 40;
+	int numSamples = 20;
 	//double arcLengths[40];
 
 	GLMmodel m_model;

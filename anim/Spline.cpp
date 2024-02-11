@@ -66,6 +66,8 @@ void Spline::initHermite()
 
 	}
 
+	buildArcLengthLookupTable();
+
 	// Redisplay if needed
 	glutPostRedisplay();
 }
@@ -131,32 +133,32 @@ void Spline::reset(double time)
 	points.clear();
 }
 
-double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1, int numSamples) {
+double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1) {
 	double stepSize = 1.0 / double(numSamples);
 	double arcLength = 0.0;
 
 	for (int i = 0; i < numSamples; ++i) {
-		double t0 = i * stepSize;
+		double t0 = i * stepSize; // range(0,1)
 		double t1 = (i + 1) * stepSize;
 
-		// Use a numerical integration method (e.g., trapezoidal rule)
+		// Trapezoidal rule
 		double deltaS = glm::length(glm::dvec3(
 			evaluateCurve(0, t1, p0, p1) - evaluateCurve(0, t0, p0, p1),
 			evaluateCurve(1, t1, p0, p1) - evaluateCurve(1, t0, p0, p1),
 			evaluateCurve(2, t1, p0, p1) - evaluateCurve(2, t0, p0, p1)
 		));
-
-		arcLength += deltaS;
+		//(f(ti) - f(ti+1)/2
+		arcLength += 0.5 * deltaS;
 	}
 
 	return arcLength;
 }
 
-void Spline::buildArcLengthLookupTable(int numSamples) {
+void Spline::buildArcLengthLookupTable(){
 	arcLengths.clear();
 
 	for (size_t i = 0; i < points.size() - 1; ++i) {
-		double segmentLength = getArcLength(points[i], points[i + 1], numSamples);
+		double segmentLength = getArcLength(points[i], points[i + 1]);
 		double accumulatedLength = (i > 0) ? arcLengths[i - 1] : 0.0;
 
 		arcLengths.push_back(segmentLength + accumulatedLength);
