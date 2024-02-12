@@ -165,25 +165,30 @@ void Spline::buildArcLengthLookupTable(){
 	}
 }
 
-glm::dvec3 Spline::getPointOnSpline(double parameter) {
-	// Map parameter value to arc length using the lookup table
-	double targetLength = parameter * arcLengths.back();
+double Spline::getPointOnSpline(double t) {
+		// Check if the arc lengths lookup table is empty
+		if (arcLengths.empty()) {
+			animTcl::OutputMessage("Error: Arc lengths lookup table is not initialized.");
+			return 0.0;
+		}
 
-	// Find the curve segment that contains the target arc length
-	size_t segmentIndex = 0;
-	while (segmentIndex < arcLengths.size() && arcLengths[segmentIndex] < targetLength) {
-		++segmentIndex;
-	}
+		// Ensure parameter is within the valid range [0, 1]
+		t = std::max(0.0, std::min(1.0, t));
 
-	// Interpolate within the segment to find the corresponding point
-	double t = (targetLength - arcLengths[segmentIndex - 1]) / (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+		// Map parameter value to arc length using the lookup table
+		double targetLength = t * arcLengths.back();
 
-	// Use evaluateCurve to get the point
-	return glm::dvec3(
-		evaluateCurve(0, t, points[segmentIndex - 1], points[segmentIndex]),
-		evaluateCurve(1, t, points[segmentIndex - 1], points[segmentIndex]),
-		evaluateCurve(2, t, points[segmentIndex - 1], points[segmentIndex])
-	);
+		// Find the segment that contains the target arc length
+		size_t segmentIndex = 0;
+		while (segmentIndex < arcLengths.size() && arcLengths[segmentIndex] < targetLength) {
+			++segmentIndex;
+		}
+
+		// Interpolate within the segment to find the corresponding arc length
+		double val = (targetLength - arcLengths[segmentIndex - 1]) / (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+
+		// Return the interpolated arc length
+		return arcLengths[segmentIndex - 1] + val * (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
 }
 
 
@@ -251,6 +256,34 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 		}
 		else {
 			animTcl::OutputMessage("Usage: <name> cr");
+			return TCL_ERROR;
+		}
+	}
+	else if (strcmp(argv[0], "getArcLength") == 0) {
+		if (argc == 2) {
+			try {
+				double param = std::stod(argv[1]);
+				if (param < 0.0 || param > 1.0) {
+					animTcl::OutputMessage("Error: Parameter t should be in the range [0, 1].");
+					return TCL_ERROR;
+				}
+
+				double arcLength = getPointOnSpline(param);
+				animTcl::OutputMessage("Arc Length at t %.3f: %.3f", param, arcLength);
+				return TCL_OK;
+			}
+			catch (const std::invalid_argument& e) {
+				animTcl::OutputMessage("Error: Invalid argument. Please provide a valid number.");
+				return TCL_ERROR;
+			}
+			catch (const std::out_of_range& e) {
+				animTcl::OutputMessage("Error: Argument out of range. Please provide a valid number.");
+				return TCL_ERROR;
+
+			}
+		}
+		else {
+			animTcl::OutputMessage("Usage: <name> getArcLength <t>");
 			return TCL_ERROR;
 		}
 	}

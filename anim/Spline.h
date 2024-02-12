@@ -37,8 +37,7 @@ public:
 	double forwardDifference(double t, double h, int dimension, const ControlPoint& p0, const ControlPoint& p1);
 	double getArcLength(const ControlPoint& p0, const ControlPoint& p1);
 	void buildArcLengthLookupTable();
-	glm::dvec3 getPointOnSpline(double parameter);
-
+	double getPointOnSpline(double t);
 	void displaySampledCurve(float r);
 	void displayPoints(float r);
 	void display(GLenum mode = GL_RENDER);
