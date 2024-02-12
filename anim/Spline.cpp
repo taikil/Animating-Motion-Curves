@@ -16,26 +16,6 @@ void Spline::setState(double* p) {
 
 }
 
-bool Spline::checkColinear()
-{
-	// Check if the control points are co-linear in 3D space
-	for (size_t i = 0; i < points.size() - 1; ++i)
-	{
-		glm::dvec3 a, b, crossProduct;
-		points[i].getPos(a);
-		points[i + 1].getPos(b);
-
-		crossProduct = glm::cross(a, b);
-
-		// If the cross product is too small, points are considered collinear
-		if (glm::length(crossProduct) < 0.001)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 
 void Spline::initHermite()
 {
@@ -141,14 +121,13 @@ double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1) {
 		double t0 = i * stepSize; // range(0,1)
 		double t1 = (i + 1) * stepSize;
 
-		// Trapezoidal rule
+		// u(t1) - u(t0)
 		double deltaS = glm::length(glm::dvec3(
 			evaluateCurve(0, t1, p0, p1) - evaluateCurve(0, t0, p0, p1),
 			evaluateCurve(1, t1, p0, p1) - evaluateCurve(1, t0, p0, p1),
 			evaluateCurve(2, t1, p0, p1) - evaluateCurve(2, t0, p0, p1)
 		));
-		//(f(ti) - f(ti+1)/2
-		arcLength += 0.5 * deltaS;
+		arcLength += deltaS;
 	}
 
 	return arcLength;

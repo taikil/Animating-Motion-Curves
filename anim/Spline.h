@@ -30,11 +30,9 @@ public:
 	int setTangent(ControlPoint& a, ControlPoint& b);
 	void catMullRom();
 	void addPoint(const glm::dvec3& pos, const glm::dvec3& tan);
-	bool checkColinear();
 
 	void initHermite();
 	double evaluateCurve(int dimension, double t, ControlPoint p0, ControlPoint p1);
-	double forwardDifference(double t, double h, int dimension, const ControlPoint& p0, const ControlPoint& p1);
 	double getArcLength(const ControlPoint& p0, const ControlPoint& p1);
 	void buildArcLengthLookupTable();
 	double getPointOnSpline(double t);

@@ -241,6 +241,7 @@
     <ClCompile Include="BaseObject.cpp" />
     <ClCompile Include="BaseSimulator.cpp" />
     <ClCompile Include="Bezier.cpp" />
+    <ClCompile Include="Car.cpp" />
     <ClCompile Include="CircleSimulator.cpp" />
     <ClCompile Include="ControlPoint.cpp" />
     <ClCompile Include="GlobalResourceManager.cpp" />
@@ -259,6 +260,7 @@
     <ClInclude Include="BaseObject.h" />
     <ClInclude Include="BaseSimulator.h" />
     <ClInclude Include="Bezier.h" />
+    <ClInclude Include="Car.h" />
     <ClInclude Include="CircleSimulator.h" />
     <ClInclude Include="ControlPoint.h" />
     <ClInclude Include="GlobalResourceManager.h" />
