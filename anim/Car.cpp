@@ -4,18 +4,15 @@ Car::Car(const std::string& name) :
 	BaseSystem(name),
 	m_sx(1.0f),
 	m_sy(1.0f),
-	m_sz(1.0f)
+	m_sz(1.0f),
+	m_pos(0, 0, 0),
+	m_rot(1, 0, 0, 0)
 	//Rotation
-{
-
-	m_pos = glm::dvec3(0, 0, 0);
-	m_rot = glm::dvec3(0, 0, 0);
-
+{ 
 	m_model.ReadOBJ("../Build/data/porsche.obj");
 	glmUnitize(&m_model);
 	glmFacetNormals(&m_model);
 	glmVertexNormals(&m_model, 90);
-
 }	// Car
 
 void Car::getState(double* p)
@@ -42,8 +39,16 @@ void Car::translate(glm::dvec3 translation) {
 	//glTranslated(ranslation[0], translation[1], translation[2]);
 }
 
-void Car::rotate(glm::dvec3 rotation) {
+void Car::rotate(glm::dvec3 axis, double angleDegrees)
+{
+	// Create a quaternion representing the rotation
+	glm::quat rotationQuat = glm::angleAxis(glm::radians(angleDegrees), glm::normalize(axis));
 
+	// Combine the new rotation with the current rotation
+	m_rot= rotationQuat * m_rot;
+
+	// Optionally normalize the quaternion to avoid floating-point precision issues
+	m_rot = glm::normalize(m_rot);
 }
 
 void Car::readModel(const char* fname)
@@ -88,17 +93,28 @@ int Car::command(int argc, myCONST_SPEC char** argv)
 
 		}
 	}
-	else if (strcmp(argv[0], "pos") == 0)
+	else if (strcmp(argv[0], "translate") == 0)
 	{
 		if (argc == 4)
 		{
-			m_pos[0] = atof(argv[1]);
-			m_pos[1] = atof(argv[2]);
-			m_pos[2] = atof(argv[3]);
+			translate(glm::dvec3(atof(argv[1]), atof(argv[2]), atof(argv[3])));
 		}
 		else
 		{
-			animTcl::OutputMessage("Usage: pos <x> <y> <z> ");
+			animTcl::OutputMessage("Usage: translate <x> <y> <z> ");
+			return TCL_ERROR;
+
+		}
+	}
+	else if (strcmp(argv[0], "rotate") == 0)
+	{
+		if (argc == 5) // Need to pass axis and three rotation parameters
+		{
+			rotate(glm::dvec3(atof(argv[1]), atof(argv[2]), atof(argv[3])), atof(argv[4]));
+		}
+		else
+		{
+			animTcl::OutputMessage("Usage: rotate <axis_i> <axis_j> <axis_k> <angle_degrees>");
 			return TCL_ERROR;
 
 		}
@@ -128,7 +144,10 @@ void Car::display(GLenum mode)
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glTranslated(m_pos[0], m_pos[1], m_pos[2]);
 	glScalef(m_sx, m_sy, m_sz);
-	glRotated(m_rot[0], m_rot[1], m_rot[2]);
+	//glRotated(180, 0, 1, 0);
+	//glRotated(270, 1, 0, 0);
+	glm::mat4 rotationMatrix = glm::mat4_cast(m_rot);
+	glMultMatrixf(glm::value_ptr(rotationMatrix));
 
 	if (m_model.numvertices > 0)
 		glmDraw(&m_model, GLM_SMOOTH | GLM_MATERIAL);

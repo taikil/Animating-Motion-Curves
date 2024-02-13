@@ -13,6 +13,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include "shared/opengl.h"
 
 // a sample system
@@ -26,7 +27,7 @@ public:
 	void reset(double time);
 
 	void translate(glm::dvec3 translation);
-	void rotate(glm::dvec3 rotation);
+	void rotate(glm::dvec3 axis, double angleDegrees);
 
 	void display(GLenum mode = GL_RENDER);
 
@@ -40,8 +41,7 @@ protected:
 	float m_sy;
 	float m_sz;
 
-	glm::dvec3 m_rot;
-
+	glm::quat m_rot; // Quaternion for rotation
 	glm::dvec3 m_pos;
 
 	GLMmodel m_model;

@@ -24,6 +24,7 @@
 #include "SampleParticle.h"
 #include "Spline.h"
 #include "Car.h"
+#include "DrivingSimulator.h"
 #include "SampleGravitySimulator.h"
 #include "CircleSimulator.h"
 #include "OscillateSimulator.h"
@@ -103,7 +104,7 @@ void MakeScene(void)
 	//SampleParticle* sphere1 = new SampleParticle( "sphere1" );
 	//SampleParticle* rose1 = new SampleParticle("rose1");
 	Spline* spline1 = new Spline("hermite");
-	Car* car1 = new Car("porche");
+	Car* porsche = new Car("porsche");
 
 	// Register systems
 	//success = GlobalResourceManager::use()->addSystem( sphere1, true );
@@ -116,19 +117,19 @@ void MakeScene(void)
 	success = GlobalResourceManager::use()->addSystem(spline1, true);
 	assert(success);
 
-	success = GlobalResourceManager::use()->addSystem(car1, true);
+	success = GlobalResourceManager::use()->addSystem(porsche, true);
 	assert(success);
 
-	// Create simulators
+	 //Create simulators
 	//OscillateSimulator* oscSim1 = new OscillateSimulator("osc1", sphere1);
 
-	//CircleSimulator* circleSimulator = new CircleSimulator("circle1", rose1);
+	DrivingSimulator* driveSim1 = new DrivingSimulator("drive1", porsche);
 
 	// Register simulators
-	//success = GlobalResourceManager::use()->addSimulator(oscSim1);
+	success = GlobalResourceManager::use()->addSimulator(driveSim1);
 
 	// make sure it was registered successfully
-	//assert( success );
+	assert( success );
 
 	//success = GlobalResourceManager::use()->addSimulator(circleSimulator);
 
@@ -148,7 +149,7 @@ void MakeScene(void)
 	// make sure you got it
 	assert( sampleSystemRetrieval );
 
-	sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("porche");
+	sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("porsche");
 
 	assert(sampleSystemRetrieval);
 
@@ -156,14 +157,14 @@ void MakeScene(void)
 
 	//assert(sampleSystemRetrieval);
 
-	//BaseSimulator* sampleSimulatorRetrieval;
+	BaseSimulator* sampleSimulatorRetrieval;
 
 	 //retrieve the simulator
-	//sampleSimulatorRetrieval = 
-		//GlobalResourceManager::use()->getSimulator( "osc1" );
+	sampleSimulatorRetrieval = 
+		GlobalResourceManager::use()->getSimulator( "drive1" );
 
 	// make sure you got it
-	//assert( sampleSimulatorRetrieval );
+	assert( sampleSimulatorRetrieval );
 
 	//sampleSimulatorRetrieval = GlobalResourceManager::use()->getSimulator("circle1");
 
