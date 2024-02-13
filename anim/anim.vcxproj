@@ -244,6 +244,7 @@
     <ClCompile Include="Car.cpp" />
     <ClCompile Include="CircleSimulator.cpp" />
     <ClCompile Include="ControlPoint.cpp" />
+    <ClCompile Include="DrivingSimulator.cpp" />
     <ClCompile Include="GlobalResourceManager.cpp" />
     <ClCompile Include="myScene.cpp" />
     <ClCompile Include="OscillateSimulator.cpp" />
@@ -263,6 +264,7 @@
     <ClInclude Include="Car.h" />
     <ClInclude Include="CircleSimulator.h" />
     <ClInclude Include="ControlPoint.h" />
+    <ClInclude Include="DrivingSimulator.h" />
     <ClInclude Include="GlobalResourceManager.h" />
     <ClInclude Include="myScene.h" />
     <ClInclude Include="OscillateSimulator.h" />

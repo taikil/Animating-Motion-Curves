@@ -23,6 +23,7 @@
 #include "myScene.h"
 #include "SampleParticle.h"
 #include "Spline.h"
+#include "Car.h"
 #include "SampleGravitySimulator.h"
 #include "CircleSimulator.h"
 #include "OscillateSimulator.h"
@@ -102,6 +103,7 @@ void MakeScene(void)
 	//SampleParticle* sphere1 = new SampleParticle( "sphere1" );
 	//SampleParticle* rose1 = new SampleParticle("rose1");
 	Spline* spline1 = new Spline("hermite");
+	Car* car1 = new Car("porche");
 
 	// Register systems
 	//success = GlobalResourceManager::use()->addSystem( sphere1, true );
@@ -112,6 +114,9 @@ void MakeScene(void)
 	//assert(success);
 
 	success = GlobalResourceManager::use()->addSystem(spline1, true);
+	assert(success);
+
+	success = GlobalResourceManager::use()->addSystem(car1, true);
 	assert(success);
 
 	// Create simulators
@@ -143,9 +148,9 @@ void MakeScene(void)
 	// make sure you got it
 	assert( sampleSystemRetrieval );
 
-	//sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("rose1");
+	sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("porche");
 
-	//assert(sampleSystemRetrieval);
+	assert(sampleSystemRetrieval);
 
 	//sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("sphere1");
 

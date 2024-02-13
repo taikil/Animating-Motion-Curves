@@ -11,6 +11,11 @@ Car::Car(const std::string& name) :
 	m_pos = glm::dvec3(0, 0, 0);
 	m_rot = glm::dvec3(0, 0, 0);
 
+	m_model.ReadOBJ("../Build/data/porsche.obj");
+	glmUnitize(&m_model);
+	glmFacetNormals(&m_model);
+	glmVertexNormals(&m_model, 90);
+
 }	// Car
 
 void Car::getState(double* p)
@@ -59,9 +64,7 @@ int Car::command(int argc, myCONST_SPEC char** argv)
 	{
 		if (argc == 2)
 		{
-			m_model.ReadOBJ(argv[1]);
-			glmFacetNormals(&m_model);
-			glmVertexNormals(&m_model, 90);
+			readModel(argv[1]);
 			return TCL_OK;
 		}
 		else
@@ -125,6 +128,7 @@ void Car::display(GLenum mode)
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glTranslated(m_pos[0], m_pos[1], m_pos[2]);
 	glScalef(m_sx, m_sy, m_sz);
+	glRotated(m_rot[0], m_rot[1], m_rot[2]);
 
 	if (m_model.numvertices > 0)
 		glmDraw(&m_model, GLM_SMOOTH | GLM_MATERIAL);

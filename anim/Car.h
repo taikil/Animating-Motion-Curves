@@ -1,13 +1,6 @@
 #pragma once
-#ifndef MY_PARTICLE_H
-#define MY_PARTICLE_H
-
-/*
-
-	This is a sample system. It accepts the command "read" followed by the
-	path to an OBJ model.
-
-*/
+#ifndef MY_CAR_H
+#define MY_CAR_H
 
 
 #include "BaseSystem.h"
