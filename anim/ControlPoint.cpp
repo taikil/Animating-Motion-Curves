@@ -26,7 +26,7 @@ void ControlPoint::setTan(const glm::dvec3& tan)
 	tangent = tan;
 }
 
-void ControlPoint::getPoints(glm::dvec3 points[20])
+void ControlPoint::getPoints(glm::dvec3 points[50])
 {
 	for (size_t i = 0; i < numSamples; i++) {
 		points[i] = samplePoints[i];
@@ -34,7 +34,7 @@ void ControlPoint::getPoints(glm::dvec3 points[20])
 }
 
 
-void ControlPoint::setSamplePoints(const glm::dvec3 points[20]) {
+void ControlPoint::setSamplePoints(const glm::dvec3 points[50]) {
 	for (size_t i = 0; i < numSamples; i++) {
 		samplePoints[i] = points[i];
 	}

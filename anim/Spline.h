@@ -27,7 +27,8 @@ public:
 	virtual void setState(double* p); 
 	void reset(double time);
 
-	int setTangent(ControlPoint& a, ControlPoint& b);
+	int setTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c);
+	int setEndPointTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c, bool end);
 	void catMullRom();
 	void addPoint(const glm::dvec3& pos, const glm::dvec3& tan);
 
@@ -48,8 +49,7 @@ protected:
 	std::vector<ControlPoint> points;
 	std::vector<double> arcLengths; 
 	int numPoints = 40;
-	int numSamples = 20;
-	//double arcLengths[40];
+	int numSamples = 50;
 
 	GLMmodel m_model;
 };
