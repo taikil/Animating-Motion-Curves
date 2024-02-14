@@ -5,11 +5,16 @@ Car::Car(const std::string& name) :
 	m_sx(1.0f),
 	m_sy(1.0f),
 	m_sz(1.0f),
-	m_pos(0, 0, 0),
-	m_rot(1, 0, 0, 0)
-	//Rotation
-{ 
-	m_model.ReadOBJ("../Build/data/porsche.obj");
+	m_pos(0, 0, 0)
+{
+	glm::quat rotationQuatI = glm::angleAxis(glm::radians(270.0), glm::dvec3(1, 0, 0)); // 90 degrees about i-axis
+	glm::quat rotationQuatJ = glm::angleAxis(glm::radians(180.0), glm::dvec3(0, 1, 0)); // 180 degrees about j-axis
+
+	// Combine the rotations
+	m_rot = rotationQuatJ * rotationQuatI;
+
+	//m_model.ReadOBJ("../Build/data/porsche.obj");
+	m_model.ReadOBJ("../Build/data/f-16.obj");
 	glmUnitize(&m_model);
 	glmFacetNormals(&m_model);
 	glmVertexNormals(&m_model, 90);
@@ -17,13 +22,23 @@ Car::Car(const std::string& name) :
 
 void Car::getState(double* p)
 {
+	// Assuming p is a pointer to a double array of size 3
+	//glm::dvec3 position;
+	//BaseSystem::getState(glm::value_ptr(position)); // Call the base class implementation
 
-
-}	// Car::getState
+	// Convert glm::dvec3 to double array
+	p[0] = m_pos.x;
+	p[1] = m_pos.y;
+	p[2] = m_pos.z;
+}	 //Car::getState
 
 void Car::setState(double* p)
 {
+	glm::dvec3 position(p[0], p[1], p[2]);
+	m_pos = position;
 
+	// Call the base class implementation
+	//BaseSystem::setState(glm::value_ptr(position));
 
 }	// Car::setState
 
@@ -45,7 +60,7 @@ void Car::rotate(glm::dvec3 axis, double angleDegrees)
 	glm::quat rotationQuat = glm::angleAxis(glm::radians(angleDegrees), glm::normalize(axis));
 
 	// Combine the new rotation with the current rotation
-	m_rot= rotationQuat * m_rot;
+	m_rot = rotationQuat * m_rot;
 
 	// Optionally normalize the quaternion to avoid floating-point precision issues
 	m_rot = glm::normalize(m_rot);

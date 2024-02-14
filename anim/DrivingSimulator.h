@@ -4,6 +4,13 @@
 #include "animTcl.h"
 #include "BaseSimulator.h"
 #include "BaseSystem.h"
+#include "Car.h"
+#include "Spline.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 
 #include <string>
 
@@ -19,7 +26,9 @@ public:
 	int step(double time);
 	int init(double time)
 	{
-		m_object->getState(m_pos0);
+		Vector pos;
+		m_object->getState(pos);
+		m_pos0 = glm::dvec3(pos[0], pos[1], pos[2]);
 
 		// Set this to set the radius of the circle
 		amplitude = 4.0;
@@ -34,10 +43,10 @@ public:
 
 protected:
 
-	Vector m_pos0; // initial position
-	Vector m_vel0; // initial velocity
-	Vector m_pos;
-	Vector m_vel;
+	glm::dvec3 m_pos0; // initial position
+	glm::dvec3 m_vel0; // initial velocity
+	glm::dvec3 m_pos;
+	glm::dvec3 m_vel;
 
 	double amplitude;
 	double frequency;
