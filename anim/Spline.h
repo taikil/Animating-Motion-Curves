@@ -28,7 +28,7 @@ public:
 	void reset(double time);
 
 	int setTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c);
-	int setEndPointTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c, bool end);
+	int setEndPointTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c);
 	void catMullRom();
 	void addPoint(const glm::dvec3& pos, const glm::dvec3& tan);
 

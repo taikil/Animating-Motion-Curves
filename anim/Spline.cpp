@@ -90,7 +90,7 @@ void Spline::catMullRom() {
 		ControlPoint& p0 = points[0];
 		ControlPoint& p1 = points[1];
 		ControlPoint& p2 = points[2];
-		setEndPointTangent(p0, p1, p2, false);
+		setEndPointTangent(p0, p1, p2);
 	}
 
 
@@ -103,10 +103,10 @@ void Spline::catMullRom() {
 	}
 	int size = points.size() - 1; // last index
 
-	ControlPoint& p0 = points[size - 1];
-	ControlPoint& p1 = points[size - 2];
-	ControlPoint& p2 = points[size];
-	setEndPointTangent(p0, p1, p2, true);
+	//ControlPoint& p0 = points[size - 1];
+	//ControlPoint& p1 = points[size - 2];
+	//ControlPoint& p2 = points[size - 3];
+	//setEndPointTangent(p0, p1, p2);
 
 
 	// Redisplay if needed
@@ -126,20 +126,14 @@ int Spline::setTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c)
 	return TCL_OK;
 }
 
-int Spline::setEndPointTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c, bool end) {
+int Spline::setEndPointTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c) {
 	glm::dvec3 pos_A, pos_B, pos_C;
 	a.getPos(pos_A);
 	b.getPos(pos_B);
 	c.getPos(pos_C);
 	glm::dvec3 tangent;
-	if (end) {
-		// 2(pn-1-pn-2) - (p-1-pn)/2
-		tangent = (2.0 * (pos_A - pos_B)) - ((pos_A - pos_C) * 0.5);
-	}
-	else {
-		// 2(p1-p0) - (p2-p0)/2
-		tangent = (2.0 * (pos_B - pos_A)) - ((pos_C - pos_A) * 0.5);
-	}
+	// 2(p1-p0) - (p2-p0)/2
+	tangent = (2.0 * (pos_B - pos_A)) - ((pos_C - pos_A) * 0.5);
 	a.setTan(tangent);
 	return TCL_OK;
 }
