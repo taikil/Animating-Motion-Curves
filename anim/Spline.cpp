@@ -212,6 +212,7 @@ double Spline::getLenFromT(double t) {
 	t = std::max(0.0, std::min(1.0, t));
 	int i = (t * arcLengths.size()); // u/distance between entries (1/n)
 	// This is to convert my stored t (which is n/sample points) into the parametrized t (n/340)
+	i = std::min(i, static_cast<int>(arcLengths.size()) - 2);
 	double cur = static_cast<double>(i) / static_cast<double>(arcLengths.size());
 
 	if (i == arcLengths.size()) {
@@ -220,16 +221,14 @@ double Spline::getLenFromT(double t) {
 
 	// S[i] + ((u - U[i])/(U[i+1] - U[i])) * (S[i+1] - S[i]
 
-	// Arc lengths at the start and end of the segment
-	double arcLengthStart = arcLengths[i].arcLength;
-	double arcLengthEnd = arcLengths[i+1].arcLength;
-	// Parameters at the start and end of the segment
-	double paramStart = (arcLengths[i].t / numPoints) ;
-	double paramEnd = (arcLengths[i + 1].t / numPoints);
-	// Total parameter range of the segment
-	double paramRange = paramEnd - paramStart;
-	// Normalized parameter within the segment [i, i+1]
-	double normalizedParam = (t - (paramStart + cur)) / paramRange;
+	double arcLengthStart = arcLengths[i].arcLength; //S[i]
+	double arcLengthEnd = arcLengths[i + 1].arcLength; // S[i+1
+
+	double paramStart = (arcLengths[i].t / numPoints); // U[i] 
+	double paramEnd = (arcLengths[i + 1].t / numPoints); // U[i+1]
+
+	double paramRange = paramEnd - paramStart; // U[i+1] - U[i]
+	double normalizedParam = std::max(0.0, std::min(1.0, (t - paramStart) / paramRange)); // ((u - U[i])/(U[i+1] - U[i])) 	
 	// Linear interpolation between arc lengths at  i and i+1
 	double val = arcLengthStart + normalizedParam * (arcLengthEnd - arcLengthStart);
 
