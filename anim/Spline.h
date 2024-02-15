@@ -42,6 +42,7 @@ public:
 	double getArcLength(const ControlPoint& p0, const ControlPoint& p1);
 	void buildArcLengthLookupTable();
 	double getSplineLength(double t);
+	double getLenFromT(double t);
 
 	glm::dvec3 getCarPosition(double t);
 	void displaySampledCurve(float r);
@@ -55,9 +56,9 @@ public:
 protected:
 	std::vector<ControlPoint> points;
 	std::vector<ArcLengthEntry> arcLengths;
-	int numPoints = 0;
-	int maxPoints = 40;
-	int numSamples = 20;
+	int numPoints = -1;
+	const int maxPoints = 40;
+	const int numSamples = 20;
 
 	GLMmodel m_model;
 };

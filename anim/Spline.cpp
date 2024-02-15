@@ -30,7 +30,7 @@ void Spline::initHermite()
 	// Iterate over each pair of consecutive control points
 	for (size_t i = 0; i < points.size() - 1; ++i)
 	{
-		double stepSize = 1.0 / double(numSamples) ;
+		double stepSize = 1.0 / double(numSamples);
 		ControlPoint p0 = points[i];
 		ControlPoint p1 = points[i + 1];
 		glm::dvec3 samplePoints[20];
@@ -156,7 +156,7 @@ double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1) {
 		entry.t = t0;
 		arcLengths.push_back(entry);
 		arcLength += deltaS;
-		animTcl::OutputMessage("  New len: %.3f", deltaS + accumulatedLength);
+		animTcl::OutputMessage("  New len: %.3f, new t: %.3f", deltaS + accumulatedLength, t0);
 	}
 
 	return arcLength;
@@ -186,22 +186,55 @@ double Spline::getSplineLength(double t) {
 	//t = 1 / t;
 
 	// Map parameter value to arc length using the lookup table
-	double targetLength = t * arcLengths.back();
+	double targetLength = t * arcLengths.back().arcLength;
 
 	// Find the segment that contains the target arc length
 	size_t segmentIndex = 0;
-	while (segmentIndex < arcLengths.size() - 2 && arcLengths[segmentIndex] < targetLength) {
+	while (segmentIndex < arcLengths.size() - 2 && arcLengths[segmentIndex].arcLength < targetLength) {
 		++segmentIndex;
 	}
 
 	// Interpolate within the segment to find the corresponding arc length
-	double val = (targetLength - arcLengths[segmentIndex]) / (arcLengths[segmentIndex+1] - arcLengths[segmentIndex]);
+	double val = (targetLength - arcLengths[segmentIndex].arcLength) / (arcLengths[segmentIndex + 1].arcLength - arcLengths[segmentIndex].arcLength);
 
 	// Return the interpolated arc length
-	return arcLengths[segmentIndex] + val * (arcLengths[segmentIndex + 1] - arcLengths[segmentIndex]);
+	return arcLengths[segmentIndex].arcLength + val * (arcLengths[segmentIndex + 1].arcLength - arcLengths[segmentIndex].arcLength);
 }
 
 
+double Spline::getLenFromT(double t) {
+	// Check if the arc lengths lookup table is empty
+	if (arcLengths.empty()) {
+		animTcl::OutputMessage("Error: Arc lengths lookup table is not initialized.");
+		return 0.0;
+	}
+
+	t = std::max(0.0, std::min(1.0, t));
+	int i = (t * arcLengths.size()); // u/distance between entries (1/n)
+	// This is to convert my stored t (which is n/sample points) into the parametrized t (n/340)
+	double cur = static_cast<double>(i) / static_cast<double>(arcLengths.size());
+
+	if (i == arcLengths.size()) {
+		return arcLengths.back().arcLength;
+	}
+
+	// S[i] + ((u - U[i])/(U[i+1] - U[i])) * (S[i+1] - S[i]
+
+	// Arc lengths at the start and end of the segment
+	double arcLengthStart = arcLengths[i].arcLength;
+	double arcLengthEnd = arcLengths[i+1].arcLength;
+	// Parameters at the start and end of the segment
+	double paramStart = (arcLengths[i].t / numPoints) ;
+	double paramEnd = (arcLengths[i + 1].t / numPoints);
+	// Total parameter range of the segment
+	double paramRange = paramEnd - paramStart;
+	// Normalized parameter within the segment [i, i+1]
+	double normalizedParam = (t - (paramStart + cur)) / paramRange;
+	// Linear interpolation between arc lengths at  i and i+1
+	double val = arcLengthStart + normalizedParam * (arcLengthEnd - arcLengthStart);
+
+	return val;
+}
 
 int Spline::load(const std::string& filename)
 {
@@ -248,16 +281,16 @@ glm::dvec3 Spline::getCarPosition(double t) {
 	t = std::max(0.0, std::min(1.0, t));
 
 	// Map parameter value to arc length using the lookup table
-	double targetLength = t * arcLengths.back();
+	double targetLength = t * arcLengths.back().arcLength;
 
 	// Find the segment that contains the target arc length
 	size_t segmentIndex = 0;
-	while (segmentIndex < arcLengths.size() && arcLengths[segmentIndex] < targetLength) {
+	while (segmentIndex < arcLengths.size() && arcLengths[segmentIndex].arcLength < targetLength) {
 		++segmentIndex;
 	}
 
 	// Interpolate within the segment to find the corresponding arc length
-	double val = (targetLength - arcLengths[segmentIndex - 1]) / (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+	double val = (targetLength - arcLengths[segmentIndex - 1].arcLength) / (arcLengths[segmentIndex].arcLength - arcLengths[segmentIndex - 1].arcLength);
 
 	// Interpolate the position using the evaluated curve function
 	glm::dvec3 carPosition;
@@ -312,7 +345,8 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 					return TCL_ERROR;
 				}
 
-				double arcLength = getSplineLength(param);
+				//double arcLength = getSplineLength(param);
+				double arcLength = getLenFromT(param);
 				animTcl::OutputMessage("Arc Length at t %.3f: %.3f", param, arcLength);
 				return TCL_OK;
 			}
