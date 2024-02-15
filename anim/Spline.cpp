@@ -167,14 +167,16 @@ void Spline::buildArcLengthLookupTable() {
 	arcLengths.clear();
 
 	for (size_t i = 0; i < points.size() - 1; ++i) {
-		double segmentLength = getArcLength(points[i], points[i + 1]);
+		double segmentLength = getArcLength(points[i], points[i + 1]); //Length between segments
 		double accumulatedLength = (i > 0) ? arcLengths[i - 1] : 0.0;
 
 		arcLengths.push_back(segmentLength + accumulatedLength);
 	}
 }
 
-double Spline::getPointOnSpline(double t) {
+double Spline::getSplineLength(double t) {
+
+	t = std::max(0.0, std::min(1.0, t));
 	// Check if the arc lengths lookup table is empty
 	if (arcLengths.empty()) {
 		animTcl::OutputMessage("Error: Arc lengths lookup table is not initialized.");
@@ -183,6 +185,7 @@ double Spline::getPointOnSpline(double t) {
 
 	// Ensure parameter is within the valid range [0, 1]
 	t = std::max(0.0, std::min(1.0, t));
+	//t = 1 / t;
 
 	// Map parameter value to arc length using the lookup table
 	double targetLength = t * arcLengths.back();
@@ -193,11 +196,17 @@ double Spline::getPointOnSpline(double t) {
 		++segmentIndex;
 	}
 
-	// Interpolate within the segment to find the corresponding arc length
-	double val = (targetLength - arcLengths[segmentIndex - 1]) / (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+	if (segmentIndex > 0) {
+		// Interpolate within the segment to find the corresponding arc length
+		double val = (targetLength - arcLengths[segmentIndex - 1]) / (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
 
-	// Return the interpolated arc length
-	return arcLengths[segmentIndex - 1] + val * (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+		// Return the interpolated arc length
+		return arcLengths[segmentIndex - 1] + val * (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+	}
+	else {
+		// If segmentIndex is 0, return the arc length of the first segment
+		return arcLengths[0];
+	}
 }
 
 
@@ -231,6 +240,36 @@ int Spline::load(const std::string& filename)
 	initHermite();
 
 	return TCL_OK;
+}
+glm::dvec3 Spline::getCarPosition(double t) {
+	// Check if the arc lengths lookup table is empty
+	if (arcLengths.empty()) {
+		animTcl::OutputMessage("Error: Arc lengths lookup table is not initialized.");
+		return glm::dvec3(0.0, 0.0, 0.0);
+	}
+
+	// Ensure parameter is within the valid range [0, 1]
+	t = std::max(0.0, std::min(1.0, t));
+
+	// Map parameter value to arc length using the lookup table
+	double targetLength = t * arcLengths.back();
+
+	// Find the segment that contains the target arc length
+	size_t segmentIndex = 0;
+	while (segmentIndex < arcLengths.size() && arcLengths[segmentIndex] < targetLength) {
+		++segmentIndex;
+	}
+
+	// Interpolate within the segment to find the corresponding arc length
+	double val = (targetLength - arcLengths[segmentIndex - 1]) / (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+
+	// Interpolate the position using the evaluated curve function
+	glm::dvec3 carPosition;
+	carPosition[0] = evaluateCurve(0, val, points[segmentIndex - 1], points[segmentIndex]);
+	carPosition[1] = evaluateCurve(1, val, points[segmentIndex - 1], points[segmentIndex]);
+	carPosition[2] = evaluateCurve(2, val, points[segmentIndex - 1], points[segmentIndex]);
+
+	return carPosition;
 }
 
 
@@ -277,7 +316,7 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 					return TCL_ERROR;
 				}
 
-				double arcLength = getPointOnSpline(param);
+				double arcLength = getSplineLength(param);
 				animTcl::OutputMessage("Arc Length at t %.3f: %.3f", param, arcLength);
 				return TCL_OK;
 			}

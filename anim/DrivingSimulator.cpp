@@ -1,8 +1,9 @@
 #include "DrivingSimulator.h"
 
-DrivingSimulator::DrivingSimulator(const std::string& name, BaseSystem* target) :
+DrivingSimulator::DrivingSimulator(const std::string& name, BaseSystem* target, Spline* spline) :
 	BaseSimulator(name),
-	m_object(target)
+	m_object(target),
+	m_spline(spline)  // Add a member variable to store the spline
 {
 }
 
@@ -12,16 +13,17 @@ DrivingSimulator::~DrivingSimulator()
 
 int DrivingSimulator::step(double time)
 {
-	double pos[3] = { 0.0, 0.0, 0.0 };
-	m_object->getState(pos);
+    double pos[3] = { 0.0, 0.0, 0.0 };
+    m_object->getState(pos);
 
-	double twoPIfreqTime = 2.0 * 3.14 * frequency * time;
-	pos[1] = m_pos0[1] + amplitude * sin(twoPIfreqTime);
+    // Use the Spline class to get the car's position along the spline
+    glm::dvec3 carPosition = m_spline->getCarPosition(time);
 
-	glm::dvec3 translation = glm::dvec3(0.0, pos[1], 0.0); // Assuming y-axis represents the vertical direction
-	static_cast<Car*>(m_object)->translate(translation);
+    // Update the car's position using the translate function
+    static_cast<Car*>(m_object)->translate(carPosition);
 
-	m_object->setState(pos);
+    // Assuming the car has a setState function to update its internal state
+    m_object->setState(pos);
 
 	return 0;
 

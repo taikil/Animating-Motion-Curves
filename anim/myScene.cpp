@@ -123,7 +123,7 @@ void MakeScene(void)
 	 //Create simulators
 	//OscillateSimulator* oscSim1 = new OscillateSimulator("osc1", sphere1);
 
-	DrivingSimulator* driveSim1 = new DrivingSimulator("drive1", porsche);
+	DrivingSimulator* driveSim1 = new DrivingSimulator("drive1", porsche, spline1);
 
 	// Register simulators
 	success = GlobalResourceManager::use()->addSimulator(driveSim1);

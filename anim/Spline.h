@@ -36,7 +36,9 @@ public:
 	double evaluateCurve(int dimension, double t, ControlPoint p0, ControlPoint p1);
 	double getArcLength(const ControlPoint& p0, const ControlPoint& p1);
 	void buildArcLengthLookupTable();
-	double getPointOnSpline(double t);
+	double getSplineLength(double t);
+
+	glm::dvec3 getCarPosition(double t);
 	void displaySampledCurve(float r);
 	void displayPoints(float r);
 	void display(GLenum mode = GL_RENDER);

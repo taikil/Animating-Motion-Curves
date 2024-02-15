@@ -20,7 +20,7 @@ class DrivingSimulator : public BaseSimulator
 {
 public:
 
-	DrivingSimulator(const std::string& name, BaseSystem* target);
+	DrivingSimulator(const std::string& name, BaseSystem* target, Spline* spline);
 	~DrivingSimulator();
 
 	int step(double time);
@@ -52,5 +52,6 @@ protected:
 	double frequency;
 
 	BaseSystem* m_object;
+	Spline* m_spline;
 
 };
