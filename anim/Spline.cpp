@@ -30,17 +30,17 @@ void Spline::initHermite()
 	// Iterate over each pair of consecutive control points
 	for (size_t i = 0; i < points.size() - 1; ++i)
 	{
-		double stepSize = 1.0 / double(numSamples);
+		double stepSize = 1.0 / double(numSamples) ;
 		ControlPoint p0 = points[i];
 		ControlPoint p1 = points[i + 1];
-		glm::dvec3 samplePoints[50];
+		glm::dvec3 samplePoints[20];
 		//for each point, run
 		for (size_t j = 0; j < numSamples; j++) {
 			double t = j * stepSize;
 			samplePoints[j][0] = evaluateCurve(0, t, p0, p1);
 			samplePoints[j][1] = evaluateCurve(1, t, p0, p1);
 			samplePoints[j][2] = evaluateCurve(2, t, p0, p1);
-			animTcl::OutputMessage("Points %.3f / 50: x: %.3f, y: %.3f", static_cast<double>(j), samplePoints[j][0], samplePoints[j][1]);
+			//animTcl::OutputMessage("Points %.3f / 20: x: %.3f, y: %.3f", static_cast<double>(j), samplePoints[j][0], samplePoints[j][1]);
 		}
 		points[i].setSamplePoints(samplePoints);
 
@@ -68,7 +68,8 @@ double Spline::evaluateCurve(int dimension, double t, ControlPoint p0, ControlPo
 }
 
 void Spline::addPoint(const glm::dvec3& pos, const glm::dvec3& tan) {
-	if (points.size() < 40) {
+	if (points.size() < maxPoints) {
+		numPoints++;
 		ControlPoint new_point("Default");
 		new_point.setPos(pos);
 		new_point.setTan(tan);
@@ -103,14 +104,6 @@ void Spline::catMullRom() {
 	}
 	int size = points.size() - 1; // last index
 
-	//ControlPoint& p0 = points[size - 1];
-	//ControlPoint& p1 = points[size - 2];
-	//ControlPoint& p2 = points[size - 3];
-	//setEndPointTangent(p0, p1, p2);
-
-
-	// Redisplay if needed
-	glutPostRedisplay();
 	initHermite();
 }
 
@@ -157,7 +150,13 @@ double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1) {
 			evaluateCurve(1, t1, p0, p1) - evaluateCurve(1, t0, p0, p1),
 			evaluateCurve(2, t1, p0, p1) - evaluateCurve(2, t0, p0, p1)
 		));
+		double accumulatedLength = arcLengths.size() > 0 ? arcLengths.back().arcLength : 0.0;
+		ArcLengthEntry entry;
+		entry.arcLength = deltaS + accumulatedLength;
+		entry.t = t0;
+		arcLengths.push_back(entry);
 		arcLength += deltaS;
+		animTcl::OutputMessage("  New len: %.3f", deltaS + accumulatedLength);
 	}
 
 	return arcLength;
@@ -165,18 +164,17 @@ double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1) {
 
 void Spline::buildArcLengthLookupTable() {
 	arcLengths.clear();
-
 	for (size_t i = 0; i < points.size() - 1; ++i) {
 		double segmentLength = getArcLength(points[i], points[i + 1]); //Length between segments
-		double accumulatedLength = (i > 0) ? arcLengths[i - 1] : 0.0;
+		//double accumulatedLength = arcLengths.back();
 
-		arcLengths.push_back(segmentLength + accumulatedLength);
+		//arcLengths.push_back(segmentLength + accumulatedLength);
 	}
+	animTcl::OutputMessage("  Total entries in arcLengths: %zu", arcLengths.size()); // Output total entries
 }
 
 double Spline::getSplineLength(double t) {
 
-	t = std::max(0.0, std::min(1.0, t));
 	// Check if the arc lengths lookup table is empty
 	if (arcLengths.empty()) {
 		animTcl::OutputMessage("Error: Arc lengths lookup table is not initialized.");
@@ -192,21 +190,15 @@ double Spline::getSplineLength(double t) {
 
 	// Find the segment that contains the target arc length
 	size_t segmentIndex = 0;
-	while (segmentIndex < arcLengths.size() && arcLengths[segmentIndex] < targetLength) {
+	while (segmentIndex < arcLengths.size() - 2 && arcLengths[segmentIndex] < targetLength) {
 		++segmentIndex;
 	}
 
-	if (segmentIndex > 0) {
-		// Interpolate within the segment to find the corresponding arc length
-		double val = (targetLength - arcLengths[segmentIndex - 1]) / (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
+	// Interpolate within the segment to find the corresponding arc length
+	double val = (targetLength - arcLengths[segmentIndex]) / (arcLengths[segmentIndex+1] - arcLengths[segmentIndex]);
 
-		// Return the interpolated arc length
-		return arcLengths[segmentIndex - 1] + val * (arcLengths[segmentIndex] - arcLengths[segmentIndex - 1]);
-	}
-	else {
-		// If segmentIndex is 0, return the arc length of the first segment
-		return arcLengths[0];
-	}
+	// Return the interpolated arc length
+	return arcLengths[segmentIndex] + val * (arcLengths[segmentIndex + 1] - arcLengths[segmentIndex]);
 }
 
 
@@ -224,10 +216,14 @@ int Spline::load(const std::string& filename)
 	points.clear();
 
 	std::string splineName;
-	int numPoints;
-	file >> splineName >> numPoints;
+	int nPoints;
+	file >> splineName >> nPoints;
+	if (nPoints > maxPoints) {
+		animTcl::OutputMessage("Exceeded man number of points 40");
+		return TCL_ERROR;
+	}
 
-	for (int i = 0; i < numPoints; ++i)
+	for (int i = 0; i < nPoints; ++i)
 	{
 		glm::dvec3 new_pos, new_tan;
 		file >> new_pos.x >> new_pos.y >> new_pos.z >> new_tan.x >> new_tan.y >> new_tan.z;
@@ -429,11 +425,11 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 
 void Spline::displaySampledCurve(float r) {
 	glLineWidth(r);
-	glm::dvec3 samplePoints[50];
+	glm::dvec3 samplePoints[20];
 	glBegin(GL_LINE_STRIP);
 	for (int i = 0; i < points.size(); i++) {
 		points[i].getPoints(samplePoints);
-		for (int j = 0; j < 50; j++)
+		for (int j = 0; j < 20; j++)
 			glVertex3f(samplePoints[j][0], samplePoints[j][1], samplePoints[j][2]);
 	}
 	glEnd();

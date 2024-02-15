@@ -21,8 +21,8 @@ public:
     virtual void setPos(const glm::dvec3& pos);
     virtual void getTan(glm::dvec3& tan);
     virtual void setTan(const glm::dvec3& tan);
-    virtual void getPoints(glm::dvec3 points[50]);
-    virtual void setSamplePoints(const glm::dvec3 points[50]);
+    virtual void getPoints(glm::dvec3 points[20]);
+    virtual void setSamplePoints(const glm::dvec3 points[20]);
     void reset(double time);
 
     void display(GLenum mode = GL_RENDER);
@@ -33,8 +33,8 @@ public:
 protected:
     glm::dvec3 m_pos;
     glm::dvec3 tangent;
-    const int numSamples = 50;
-    glm::dvec3 samplePoints[50];
+    const int numSamples = 20;
+    glm::dvec3 samplePoints[20];
     GLMmodel m_model;
 };
 

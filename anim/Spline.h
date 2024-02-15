@@ -18,6 +18,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+struct ArcLengthEntry {
+	double arcLength;
+	double t;
+};
+
 class Spline : public BaseSystem
 {
 
@@ -49,9 +54,10 @@ public:
 
 protected:
 	std::vector<ControlPoint> points;
-	std::vector<double> arcLengths; 
-	int numPoints = 40;
-	int numSamples = 50;
+	std::vector<ArcLengthEntry> arcLengths;
+	int numPoints = 0;
+	int maxPoints = 40;
+	int numSamples = 20;
 
 	GLMmodel m_model;
 };
