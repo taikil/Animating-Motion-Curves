@@ -43,6 +43,11 @@ public:
 	void buildArcLengthLookupTable();
 	double getSplineLength(double t);
 	double getLenFromT(double t);
+	double getTfromSecant(double len);
+
+
+	double convertLocalTtoGlobalT(double localT);
+	double convertGlobalTtoLocalT(double globalT);
 
 	glm::dvec3 getCarPosition(double t);
 	void displaySampledCurve(float r);

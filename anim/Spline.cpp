@@ -210,6 +210,13 @@ double Spline::getLenFromT(double t) {
 	}
 
 	t = std::max(0.0, std::min(1.0, t));
+	if (t == 1.0){
+		return arcLengths.back().arcLength;
+	}
+	else if (t == 0.0) {
+		return 0.0;
+	}
+
 	int i = (t * arcLengths.size()); // u/distance between entries (1/n)
 	// This is to convert my stored t (which is n/sample points) into the parametrized t (n/340)
 	i = std::min(i, static_cast<int>(arcLengths.size()) - 2);
@@ -220,7 +227,6 @@ double Spline::getLenFromT(double t) {
 	}
 
 	// S[i] + ((u - U[i])/(U[i+1] - U[i])) * (S[i+1] - S[i]
-
 	double arcLengthStart = arcLengths[i].arcLength; //S[i]
 	double arcLengthEnd = arcLengths[i + 1].arcLength; // S[i+1
 
@@ -233,6 +239,44 @@ double Spline::getLenFromT(double t) {
 	double val = arcLengthStart + normalizedParam * (arcLengthEnd - arcLengthStart);
 
 	return val;
+}
+
+double Spline::getTfromSecant(double len) {
+	if (len > arcLengths.back().arcLength) {
+		return 1.0;
+	}
+
+	int maxIterations = 20;
+	double tolerance = 1e-3;
+	double t0 = 0.0;
+	double t1 = 1.0;
+
+	// Perform the secant method iteration
+	for (int iteration = 0; iteration < maxIterations; ++iteration) {
+		double len0 = getLenFromT(t0);
+		double len1 = getLenFromT(t1);
+
+		// Check for division by zero
+		if (len1 - len0 == 0.0) {
+			return -1.0;
+		}
+
+		// Update the next approximation
+		double nextT = t1 - ((len1 - len) * (t1 - t0)) / (len1 - len0);
+
+		// Check for convergence based on arc length
+		//if (std::abs(getLenFromT(nextT) - len) < tolerance) {
+		if (std::abs(nextT - t1) < tolerance) {
+			return nextT;
+		}
+
+		// Update values for the next iteration
+		t0 = t1;
+		t1 = nextT;
+	}
+
+	animTcl::OutputMessage("Error: Secant method did not converge within the specified number of iterations.");
+	return 0.0;
 }
 
 int Spline::load(const std::string& filename)
@@ -300,6 +344,19 @@ glm::dvec3 Spline::getCarPosition(double t) {
 	return carPosition;
 }
 
+double Spline::convertLocalTtoGlobalT(double localT) {
+	// Convert the local t value to the global parameterized t value
+	return localT / static_cast<double>(numSamples);
+}
+
+double Spline::convertGlobalTtoLocalT(double globalT) {
+	// Convert the global parameterized t value to the local t value
+	// Ensure the value is within the valid range [0, 1]
+	globalT = std::max(0.0, std::min(1.0, globalT));
+
+	// Map the global parameterized t value to the local t value
+	return static_cast<double>(globalT * static_cast<double>(numSamples));
+}
 
 int Spline::command(int argc, myCONST_SPEC char** argv)
 {
@@ -347,6 +404,30 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 				//double arcLength = getSplineLength(param);
 				double arcLength = getLenFromT(param);
 				animTcl::OutputMessage("Arc Length at t %.3f: %.3f", param, arcLength);
+				return TCL_OK;
+			}
+			catch (const std::invalid_argument& e) {
+				animTcl::OutputMessage("Error: Invalid argument. Please provide a valid number.");
+				return TCL_ERROR;
+			}
+			catch (const std::out_of_range& e) {
+				animTcl::OutputMessage("Error: Argument out of range. Please provide a valid number.");
+				return TCL_ERROR;
+
+			}
+		}
+		else {
+			animTcl::OutputMessage("Usage: <name> getArcLength <t>");
+			return TCL_ERROR;
+		}
+	}
+	else if (strcmp(argv[0], "getT") == 0) {
+		if (argc == 2) {
+			try {
+				double len = std::stod(argv[1]);
+				//double arcLength = getSplineLength(param);
+				double t = getTfromSecant(len);
+				animTcl::OutputMessage("t at arcLen: %.3f: %.3f", len, t);
 				return TCL_OK;
 			}
 			catch (const std::invalid_argument& e) {
