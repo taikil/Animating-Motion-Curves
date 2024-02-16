@@ -257,8 +257,8 @@ double Spline::getLenFromT(double t) {
 }
 
 double Spline::getTfromSecant(double len) {
-	if (len > arcLengths.back().arcLength) {
-		return 1.0;
+	if (arcLengths.size() == 0) {
+		return 0.0;
 	}
 
 	int maxIterations = 20;
@@ -276,7 +276,7 @@ double Spline::getTfromSecant(double len) {
 			return t1;
 		}
 
-		// Update the next approximation
+		// Compare with len 
 		double nextT = t1 - ((len1 - len) * (t1 - t0)) / (len1 - len0);
 
 		// Check for convergence based on arc length

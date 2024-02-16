@@ -23,7 +23,7 @@ int DrivingSimulator::step(double time) // 0.01s
 
     if (glm::length(carPosition) > 0.0) {
         // Calculate the rotation angle in degrees based on the arctangent of the tangent vector components
-        double rotationAngleDegrees = glm::degrees(atan2(carRotation.y, carRotation.x));
+        double rotationAngleDegrees = glm::degrees(atan2(carRotation.x, carRotation.y));
 
         // Rotate the car around the vertical axis based on the calculated angle
         static_cast<Car*>(m_object)->rotate(glm::dvec3(0, 0, 1), rotationAngleDegrees);
