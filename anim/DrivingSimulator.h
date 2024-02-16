@@ -30,12 +30,6 @@ public:
 		m_object->getState(pos);
 		m_pos0 = glm::dvec3(pos[0], pos[1], pos[2]);
 
-		// Set this to set the radius of the circle
-		amplitude = 4.0;
-
-		//Set this to change the frequency of the circular movement
-		frequency = 0.2;
-
 		return 0;
 	};
 
@@ -48,8 +42,7 @@ protected:
 	glm::dvec3 m_pos;
 	glm::dvec3 m_vel;
 
-	double amplitude;
-	double frequency;
+	const double velocity = 2.0; // m/s
 
 	BaseSystem* m_object;
 	Spline* m_spline;

@@ -193,6 +193,33 @@ void myKey(unsigned char key, int x, int y)
 
 }	// myKey
 
+Spline* g_hermiteSystem = nullptr;
+
+static int part1Command(ClientData clientData, Tcl_Interp* interp, int argc, myCONST_SPEC char** argv) {
+	if (argc != 3) {
+		animTcl::OutputMessage("Usage: part1 load <spline_path>");
+		return TCL_ERROR;
+	}
+
+	const char* subcommand = argv[1];
+	const char* splinePath = argv[2];
+
+	if (strcmp(subcommand, "load") == 0) {
+		// Instantiate the hermite spline system
+		g_hermiteSystem = new Spline("hermite");
+
+		// Load the spline from the specified path
+		g_hermiteSystem->load(splinePath);
+
+		animTcl::OutputMessage("Loaded spline from: %s", splinePath);
+		return TCL_OK;
+	}
+	else {
+		animTcl::OutputMessage("Unknown subcommand for part1: %s", subcommand);
+		return TCL_ERROR;
+	}
+}
+
 static int testGlobalCommand(ClientData clientData, Tcl_Interp *interp, int argc, myCONST_SPEC char **argv)
 {
 	 animTcl::OutputMessage("This is a test command!");
@@ -208,6 +235,8 @@ void mySetScriptCommands(Tcl_Interp *interp)
 	// commands with the shell
 
 	Tcl_CreateCommand(interp, "test", testGlobalCommand, (ClientData) NULL,
+					  (Tcl_CmdDeleteProc *)	NULL);
+	Tcl_CreateCommand(interp, "part1", part1Command, (ClientData) NULL,
 					  (Tcl_CmdDeleteProc *)	NULL);
 
 }	// mySetScriptCommands

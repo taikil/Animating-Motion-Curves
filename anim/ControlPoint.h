@@ -17,6 +17,13 @@ class ControlPoint : public BaseSystem
 {
 public:
     ControlPoint(const std::string& name);
+
+    // Copy constructor
+    ControlPoint(const ControlPoint& other);
+
+    // Copy assignment operator
+    ControlPoint& operator=(const ControlPoint& other);
+
     virtual void getPos(glm::dvec3& pos);
     virtual void setPos(const glm::dvec3& pos);
     virtual void getTan(glm::dvec3& tan);

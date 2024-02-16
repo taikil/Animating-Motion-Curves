@@ -11,20 +11,21 @@ DrivingSimulator::~DrivingSimulator()
 {
 }
 
-int DrivingSimulator::step(double time)
+int DrivingSimulator::step(double time) // 0.01s
 {
     double pos[3] = { 0.0, 0.0, 0.0 };
     m_object->getState(pos);
 
+
     // Use the Spline class to get the car's position along the spline
-    glm::dvec3 carPosition = m_spline->getCarPosition(time);
+    glm::dvec3 carPosition = m_spline->getCarPosition(velocity * time); // 2m/s
 
     // Update the car's position using the translate function
     static_cast<Car*>(m_object)->translate(carPosition);
 
     // Assuming the car has a setState function to update its internal state
-    m_object->setState(pos);
+    //m_object->setState(pos);
 
-	return 0;
+    return 0;
 
 }

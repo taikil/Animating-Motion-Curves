@@ -52,18 +52,18 @@ void Spline::initHermite()
 	glutPostRedisplay();
 }
 
-double Spline::evaluateCurve(int dimension, double t, ControlPoint p0, ControlPoint p1) {
+double Spline::evaluateCurve(int d, double t, ControlPoint p0, ControlPoint p1) {
 	glm::dvec3 pos0, pos1, tan0, tan1;
 	p0.getPos(pos0);
 	p0.getTan(tan0);
 	p1.getPos(pos1);
 	p1.getTan(tan1);
-	double a = (2 * pow(t, 3) - 3 * pow(t, 2) + 1) * pos0[dimension]; // (2t^3 -3t^2 + 1)y0
-	double b = (-2 * pow(t, 3) + 3 * pow(t, 2)) * pos1[dimension]; // (-2t^3 + 3t^2)y1
-	double c = (pow(t, 3) - 2 * pow(t, 2) + t) * tan0[dimension]; // (t^3 - 2t^2+ t)s0
-	double d = (pow(t, 3) - pow(t, 2)) * tan1[dimension]; // (t^3 - t^2)s1
+	double h1 = (2 * pow(t, 3) - 3 * pow(t, 2) + 1) * pos0[d]; // (2t^3 -3t^2 + 1)y0
+	double h2 = (-2 * pow(t, 3) + 3 * pow(t, 2)) * pos1[d]; // (-2t^3 + 3t^2)y1
+	double h3 = (pow(t, 3) - 2 * pow(t, 2) + t) * tan0[d]; // (t^3 - 2t^2+ t)s0
+	double h4 = (pow(t, 3) - pow(t, 2)) * tan1[d]; // (t^3 - t^2)s1
 
-	return (a + b + c + d);
+	return (h1 + h2 + h3 + h4);
 
 }
 
@@ -91,7 +91,7 @@ void Spline::catMullRom() {
 		ControlPoint& p0 = points[0];
 		ControlPoint& p1 = points[1];
 		ControlPoint& p2 = points[2];
-		setEndPointTangent(p0, p1, p2);
+		setEndPointTangent(p0, p1, p2, false);
 	}
 
 
@@ -103,6 +103,10 @@ void Spline::catMullRom() {
 		setTangent(p0, p1, p2);
 	}
 	int size = points.size() - 1; // last index
+	ControlPoint& p0 = points[size - 2];
+	ControlPoint& p1 = points[size - 1];
+	ControlPoint& p2 = points[size];
+	setEndPointTangent(p0, p1, p2, true);
 
 	initHermite();
 }
@@ -119,21 +123,30 @@ int Spline::setTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c)
 	return TCL_OK;
 }
 
-int Spline::setEndPointTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c) {
+int Spline::setEndPointTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c, bool end) {
 	glm::dvec3 pos_A, pos_B, pos_C;
 	a.getPos(pos_A);
 	b.getPos(pos_B);
 	c.getPos(pos_C);
 	glm::dvec3 tangent;
 	// 2(p1-p0) - (p2-p0)/2
-	tangent = (2.0 * (pos_B - pos_A)) - ((pos_C - pos_A) * 0.5);
-	a.setTan(tangent);
+	if (end) {
+		tangent = (2.0 * (pos_C - pos_B)) - ((pos_C - pos_A) * 0.5);
+		b.setTan(tangent);
+		c.setTan(tangent);
+	}
+	else {
+		tangent = (2.0 * (pos_B - pos_A)) - ((pos_C - pos_A) * 0.5);
+		a.setTan(tangent);
+	}
 	return TCL_OK;
 }
 
 void Spline::reset(double time)
 {
-	points.clear();
+	initHermite();
+	//points.clear();
+	//numPoints = 0;
 }
 
 double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1) {
@@ -154,6 +167,8 @@ double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1) {
 		ArcLengthEntry entry;
 		entry.arcLength = deltaS + accumulatedLength;
 		entry.t = t0;
+		entry.p0 = p0;
+		entry.p1 = p1;
 		arcLengths.push_back(entry);
 		arcLength += deltaS;
 		animTcl::OutputMessage("  New len: %.3f, new t: %.3f", deltaS + accumulatedLength, t0);
@@ -210,7 +225,7 @@ double Spline::getLenFromT(double t) {
 	}
 
 	t = std::max(0.0, std::min(1.0, t));
-	if (t == 1.0){
+	if (t == 1.0) {
 		return arcLengths.back().arcLength;
 	}
 	else if (t == 0.0) {
@@ -247,7 +262,7 @@ double Spline::getTfromSecant(double len) {
 	}
 
 	int maxIterations = 20;
-	double tolerance = 1e-3;
+	double tolerance = 1e-6;
 	double t0 = 0.0;
 	double t1 = 1.0;
 
@@ -258,7 +273,7 @@ double Spline::getTfromSecant(double len) {
 
 		// Check for division by zero
 		if (len1 - len0 == 0.0) {
-			return -1.0;
+			return t1;
 		}
 
 		// Update the next approximation
@@ -313,34 +328,21 @@ int Spline::load(const std::string& filename)
 
 	return TCL_OK;
 }
-glm::dvec3 Spline::getCarPosition(double t) {
-	// Check if the arc lengths lookup table is empty
-	if (arcLengths.empty()) {
-		animTcl::OutputMessage("Error: Arc lengths lookup table is not initialized.");
-		return glm::dvec3(0.0, 0.0, 0.0);
-	}
 
-	// Ensure parameter is within the valid range [0, 1]
-	t = std::max(0.0, std::min(1.0, t));
+glm::dvec3 Spline::getCarPosition(double distance) {
+	double t = getTfromSecant(distance);
+	int i = t * numPoints;
+	i = std::min(i, static_cast<int>(numPoints - 1));
+	ControlPoint p0 = points[i];
+	ControlPoint p1 = points[i + 1];
+	double t0 = t - (i * 1 / numPoints);
+	animTcl::OutputMessage("t0; %.3f", t0);
 
-	// Map parameter value to arc length using the lookup table
-	double targetLength = t * arcLengths.back().arcLength;
+	glm::dvec3 carPosition = glm::dvec3(evaluateCurve(0, t0, p0, p1),
+		evaluateCurve(1, t0, p0, p1),
+		evaluateCurve(2, t0, p0, p1));
 
-	// Find the segment that contains the target arc length
-	size_t segmentIndex = 0;
-	while (segmentIndex < arcLengths.size() && arcLengths[segmentIndex].arcLength < targetLength) {
-		++segmentIndex;
-	}
-
-	// Interpolate within the segment to find the corresponding arc length
-	double val = (targetLength - arcLengths[segmentIndex - 1].arcLength) / (arcLengths[segmentIndex].arcLength - arcLengths[segmentIndex - 1].arcLength);
-
-	// Interpolate the position using the evaluated curve function
-	glm::dvec3 carPosition;
-	carPosition[0] = evaluateCurve(0, val, points[segmentIndex - 1], points[segmentIndex]);
-	carPosition[1] = evaluateCurve(1, val, points[segmentIndex - 1], points[segmentIndex]);
-	carPosition[2] = evaluateCurve(2, val, points[segmentIndex - 1], points[segmentIndex]);
-
+	animTcl::OutputMessage("Pos: x: %.3f, y: %.3f", carPosition[0], carPosition[1]);
 	return carPosition;
 }
 
@@ -541,10 +543,17 @@ void Spline::displaySampledCurve(float r) {
 	glLineWidth(r);
 	glm::dvec3 samplePoints[20];
 	glBegin(GL_LINE_STRIP);
+
 	for (int i = 0; i < points.size(); i++) {
 		points[i].getPoints(samplePoints);
 		for (int j = 0; j < 20; j++)
 			glVertex3f(samplePoints[j][0], samplePoints[j][1], samplePoints[j][2]);
+	}
+
+	if (points.size() > 0) {
+		glm::dvec3 lastPoint;
+		points.back().getPos(lastPoint);
+		glVertex3f(lastPoint[0], lastPoint[1], lastPoint[2]);
 	}
 	glEnd();
 }
@@ -563,7 +572,8 @@ void Spline::displayPoints(float r) {
 		glEnd();
 
 		// Draw Tangents
-		glColor3f(0.153, 0.227, 0.522);  // Set line color
+		//glColor3f(0.153, 0.227, 0.522);  // Set line color
+		glColor3f(0.208, 0.373, 0.38);  // Set line color
 		glBegin(GL_LINE_STRIP);
 		double tangentLength = 0.5; // You can adjust this length
 		glVertex3f(pos.x, pos.y, pos.z);

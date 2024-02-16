@@ -21,6 +21,12 @@
 struct ArcLengthEntry {
 	double arcLength;
 	double t;
+	ControlPoint p0;
+	ControlPoint p1;
+
+	ArcLengthEntry() : arcLength(0.0), t(0.0), p0("default"), p1("default") {
+		// You can add additional initialization if needed
+	}
 };
 
 class Spline : public BaseSystem
@@ -33,7 +39,7 @@ public:
 	void reset(double time);
 
 	int setTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c);
-	int setEndPointTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c);
+	int setEndPointTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c, bool end);
 	void catMullRom();
 	void addPoint(const glm::dvec3& pos, const glm::dvec3& tan);
 

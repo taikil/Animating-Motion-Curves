@@ -35,7 +35,8 @@ void Car::getState(double* p)
 void Car::setState(double* p)
 {
 	glm::dvec3 position(p[0], p[1], p[2]);
-	m_pos = position;
+	//m_pos = position;
+	translate(position);
 
 	// Call the base class implementation
 	//BaseSystem::setState(glm::value_ptr(position));
@@ -44,7 +45,8 @@ void Car::setState(double* p)
 
 void Car::reset(double time)
 {
-
+	m_pos = glm::uvec3(0, 0, 0);
+	animTcl::OutputMessage("RESETTING!!");
 
 }	// Car::Reset
 

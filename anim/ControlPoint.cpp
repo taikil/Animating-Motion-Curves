@@ -6,6 +6,29 @@ ControlPoint::ControlPoint(const std::string& name) : BaseSystem(name)
 	tangent = glm::dvec3(0.0, 0.0, 0.0);
 }
 
+// Copy constructor
+ControlPoint::ControlPoint(const ControlPoint& other) : BaseSystem(other.m_name)
+{
+	m_pos = other.m_pos;
+	tangent = other.tangent;
+	std::copy(other.samplePoints, other.samplePoints + numSamples, samplePoints);
+	m_model = other.m_model; // Assuming GLMmodel supports copy semantics
+}
+
+// Copy assignment operator
+ControlPoint& ControlPoint::operator=(const ControlPoint& other)
+{
+	if (this != &other) // self-assignment check
+	{
+		m_name = other.m_name;
+		m_pos = other.m_pos;
+		tangent = other.tangent;
+		std::copy(other.samplePoints, other.samplePoints + numSamples, samplePoints);
+		m_model = other.m_model; // Assuming GLMmodel supports copy semantics
+	}
+	return *this;
+}
+
 void ControlPoint::getPos(glm::dvec3& pos)
 {
 	pos = m_pos;
