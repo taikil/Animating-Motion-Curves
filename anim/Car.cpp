@@ -47,7 +47,6 @@ void Car::reset(double time)
 {
 	double p[3] = { 0,0,0 };
 	setState(p);
-	animTcl::OutputMessage("RESETTING!!");
 	glm::quat rotationQuatI = glm::angleAxis(glm::radians(270.0), glm::dvec3(1, 0, 0)); // 90 degrees about i-axis
 	glm::quat rotationQuatJ = glm::angleAxis(glm::radians(180.0), glm::dvec3(0, 1, 0)); // 180 degrees about j-axis
 	m_rot = rotationQuatJ * rotationQuatI;
@@ -62,15 +61,18 @@ void Car::translate(glm::dvec3 translation) {
 
 void Car::rotate(glm::dvec3 axis, double angleDegrees)
 {
-	// Create a quaternion representing the rotation
-	glm::quat rotationQuat = glm::angleAxis(glm::radians(angleDegrees), glm::normalize(axis));
+	// Reset to base orientation
+	glm::quat baseOrientation = glm::angleAxis(glm::radians(270.0), glm::dvec3(1, 0, 0)) *
+		glm::angleAxis(glm::radians(180.0), glm::dvec3(0, 1, 0));
+	m_rot = baseOrientation;
 
-	// Combine the new rotation with the current rotation
+	glm::quat rotationQuat = glm::angleAxis(glm::radians(-angleDegrees), glm::normalize(axis));
+
 	m_rot = rotationQuat * m_rot;
 
-	// Optionally normalize the quaternion to avoid floating-point precision issues
 	m_rot = glm::normalize(m_rot);
 }
+
 
 void Car::readModel(const char* fname)
 {

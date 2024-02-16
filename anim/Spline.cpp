@@ -345,6 +345,28 @@ glm::dvec3 Spline::getCarPosition(double distance) {
 	return carPosition;
 }
 
+glm::dvec3 Spline::getTangents(double distance) {
+	double t = getTfromSecant(distance);
+	int i = t * numPoints;
+	i = std::min(i, static_cast<int>(numPoints - 1));
+	ControlPoint p0 = points[i];
+	ControlPoint p1 = points[i + 1];
+	glm::dvec3 tan0, tan1, lerpTan;
+	p0.getTan(tan0);
+	p1.getTan(tan1);
+	double t0 = (t - (static_cast<float>(i) / numPoints)) * numPoints;
+	lerpTan = glm::dvec3(
+		lerp(t0, tan0[0], tan1[0]),
+		lerp(t0, tan0[1], tan1[1]),
+		lerp(t0, tan0[2], tan1[2]));
+
+	return lerpTan;
+}
+
+double Spline::lerp(double t, double p0, double p1) {
+	return ((1 - t) * p0) + (t * p1);
+}
+
 double Spline::convertLocalTtoGlobalT(double localT) {
 	// Convert the local t value to the global parameterized t value
 	return localT / static_cast<double>(numSamples);

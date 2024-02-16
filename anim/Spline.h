@@ -55,7 +55,9 @@ public:
 	double convertLocalTtoGlobalT(double localT);
 	double convertGlobalTtoLocalT(double globalT);
 
+	double lerp(double t, double p0, double p1);
 	glm::dvec3 getCarPosition(double t);
+	glm::dvec3 getTangents(double distance);
 	void displaySampledCurve(float r);
 	void displayPoints(float r);
 	void display(GLenum mode = GL_RENDER);
