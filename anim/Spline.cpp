@@ -335,14 +335,13 @@ glm::dvec3 Spline::getCarPosition(double distance) {
 	i = std::min(i, static_cast<int>(numPoints - 1));
 	ControlPoint p0 = points[i];
 	ControlPoint p1 = points[i + 1];
-	double t0 = t - (i * 1 / numPoints);
-	animTcl::OutputMessage("t0; %.3f", t0);
+	double t0 = (t - (static_cast<float>(i) / numPoints)) * numPoints;
 
 	glm::dvec3 carPosition = glm::dvec3(evaluateCurve(0, t0, p0, p1),
 		evaluateCurve(1, t0, p0, p1),
 		evaluateCurve(2, t0, p0, p1));
 
-	animTcl::OutputMessage("Pos: x: %.3f, y: %.3f", carPosition[0], carPosition[1]);
+	animTcl::OutputMessage("Pos: x: %.3f, y: %.3f, t: %.3f", carPosition[0], carPosition[1], t0);
 	return carPosition;
 }
 

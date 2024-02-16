@@ -45,8 +45,12 @@ void Car::setState(double* p)
 
 void Car::reset(double time)
 {
-	m_pos = glm::uvec3(0, 0, 0);
+	double p[3] = { 0,0,0 };
+	setState(p);
 	animTcl::OutputMessage("RESETTING!!");
+	glm::quat rotationQuatI = glm::angleAxis(glm::radians(270.0), glm::dvec3(1, 0, 0)); // 90 degrees about i-axis
+	glm::quat rotationQuatJ = glm::angleAxis(glm::radians(180.0), glm::dvec3(0, 1, 0)); // 180 degrees about j-axis
+	m_rot = rotationQuatJ * rotationQuatI;
 
 }	// Car::Reset
 
@@ -144,8 +148,7 @@ int Car::command(int argc, myCONST_SPEC char** argv)
 	}
 	else if (strcmp(argv[0], "reset") == 0)
 	{
-		double p[3] = { 0,0,0 };
-		setState(p);
+		reset(0);
 	}
 
 	glutPostRedisplay();
