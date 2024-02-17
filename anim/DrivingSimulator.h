@@ -42,7 +42,10 @@ protected:
 	glm::dvec3 m_pos;
 	glm::dvec3 m_vel;
 
-	const double velocity = 3.5; // m/s
+    double prevSec = 0.0;
+	double prevTime = 0.0;
+	double velocity = 0.1; // m/s (initial)
+	double distance = 0;
 
 	BaseSystem* m_object;
 	Spline* m_spline;

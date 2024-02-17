@@ -13,13 +13,23 @@ DrivingSimulator::~DrivingSimulator()
 
 int DrivingSimulator::step(double time) // 0.01s
 {
-    double pos[3] = { 0.0, 0.0, 0.0 };
-    m_object->getState(pos);
+    if (time == 0.1) {
+        velocity = 0.1;
+        distance = 0.0;
+        prevTime = 0.0;
+        prevSec = 0.0;
+    }
+    double timeStep = time - prevTime;
+    prevTime = time;
+	animTcl::OutputMessage("The SIMULATION time is %.3f, velocity is: %.3f", time, velocity);
 
-
+    if (time - prevSec >= 1.0) {
+        animTcl::OutputMessage("The simulation time is %.3f, velocity is: %.3f", time, velocity);
+        prevSec = time;
+    }
     // Use the Spline class to get the car's position along the spline
-    glm::dvec3 carPosition = m_spline->getCarPosition(velocity * time); // 2m/s
-    glm::dvec3 carRotation = m_spline->getTangents(velocity * time);
+    glm::dvec3 carPosition = m_spline->getCarPosition(velocity, timeStep, distance); // seperated them to compute velocity 
+    glm::dvec3 carRotation = m_spline->getTangents(velocity, timeStep, distance);
 
     if (glm::length(carPosition) > 0.0) {
         // Calculate the rotation angle in degrees based on the arctangent of the tangent vector components
@@ -27,7 +37,6 @@ int DrivingSimulator::step(double time) // 0.01s
 
         // Rotate the car around the vertical axis based on the calculated angle
         static_cast<Car*>(m_object)->rotate(glm::dvec3(0, 0, 1), rotationAngleDegrees);
-		animTcl::OutputMessage("Rotation: x: %.3f", rotationAngleDegrees);
     }
 
     // Update the car's position using the translate function

@@ -10,6 +10,7 @@
 #include <shared/defs.h>
 #include <util/util.h>
 #include <fstream>
+#include <cmath>
 
 #include "shared/opengl.h"
 #include <vector>
@@ -50,14 +51,16 @@ public:
 	double getSplineLength(double t);
 	double getLenFromT(double t);
 	double getTfromSecant(double len);
+	double easeIn(double t);
+	double easeOut(double t);
 
 
 	double convertLocalTtoGlobalT(double localT);
 	double convertGlobalTtoLocalT(double globalT);
 
 	double lerp(double t, double p0, double p1);
-	glm::dvec3 getCarPosition(double t);
-	glm::dvec3 getTangents(double distance);
+	glm::dvec3 getCarPosition(double& velocity, double timeStep, double& distance);
+	glm::dvec3 getTangents(double velocity, double timeStep, double& distance);
 	void displaySampledCurve(float r);
 	void displayPoints(float r);
 	void display(GLenum mode = GL_RENDER);

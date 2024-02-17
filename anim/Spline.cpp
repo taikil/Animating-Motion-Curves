@@ -329,10 +329,33 @@ int Spline::load(const std::string& filename)
 	return TCL_OK;
 }
 
-glm::dvec3 Spline::getCarPosition(double distance) {
+glm::dvec3 Spline::getCarPosition(double& velocity, double timeStep, double& distance) {
+	distance += velocity * timeStep;
 	double t = getTfromSecant(distance);
+	t = std::max(0.0, std::min(t, 1.0));
+
+	animTcl::OutputMessage("t value: %.3f, velocity: %.3f", t, velocity);
+	if (t < 0.1) {
+		//animTcl::OutputMessage("t value: %.3f", t);
+
+		velocity = easeIn(t);
+
+		distance += velocity * timeStep;
+
+		// Recalculate t based on the new distance
+		t = getTfromSecant(distance);
+	}
+	else if (t > 0.9) {
+		velocity = easeOut(t);
+
+		distance += velocity * timeStep;
+
+		// Recalculate t based on the new distance
+		t = getTfromSecant(distance);
+	}
+
 	int i = t * numPoints;
-	i = std::min(i, static_cast<int>(numPoints - 1));
+	i = std::max(0, std::min(i, static_cast<int>(numPoints - 1)));
 	ControlPoint p0 = points[i];
 	ControlPoint p1 = points[i + 1];
 	double t0 = std::min((t - (static_cast<float>(i) / numPoints)) * numPoints, 1.0);
@@ -345,10 +368,13 @@ glm::dvec3 Spline::getCarPosition(double distance) {
 	return carPosition;
 }
 
-glm::dvec3 Spline::getTangents(double distance) {
+glm::dvec3 Spline::getTangents(double velocity, double timeStep, double& distance) {
+	distance += velocity * timeStep;
 	double t = getTfromSecant(distance);
+	t = std::max(0.0, std::min(t, 1.0));
 	int i = t * numPoints;
-	i = std::min(i, static_cast<int>(numPoints - 1));
+	i = std::max(0, std::min(i, static_cast<int>(numPoints - 1)));
+
 	ControlPoint p0 = points[i];
 	ControlPoint p1 = points[i + 1];
 	glm::dvec3 tan0, tan1, lerpTan;
@@ -363,6 +389,22 @@ glm::dvec3 Spline::getTangents(double distance) {
 		lerp(t0, tan0[2], tan1[2]));
 
 	return lerpTan;
+}
+
+double Spline::easeIn(double t) {
+	double param = t * 10.0;
+	param = std::max(0.3, std::min(1.0, param));
+	animTcl::OutputMessage("t value: %.3f", param);
+	return 2 * ((std::sin((M_PI * param) - M_PI / 2.0) + 1.0) / 2.0);
+	//return lerp(param, 0.1, 3.5);
+
+}
+
+double Spline::easeOut(double t) {
+	double param = (t - 0.9) * 10.0;
+	param = std::max(0.9, std::min(1.0, param));
+	animTcl::OutputMessage("t2 value: %.3f", t);
+	return 3.5 * ((std::sin((M_PI * param) - M_PI) + 1.0) / 2.0);
 }
 
 double Spline::lerp(double t, double p0, double p1) {
