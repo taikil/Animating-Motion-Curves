@@ -21,10 +21,9 @@ int DrivingSimulator::step(double time) // 0.01s
     }
     double timeStep = time - prevTime;
     prevTime = time;
-	animTcl::OutputMessage("The SIMULATION time is %.3f, velocity is: %.3f", time, velocity);
 
     if (time - prevSec >= 1.0) {
-        animTcl::OutputMessage("The simulation time is %.3f, velocity is: %.3f", time, velocity);
+        animTcl::OutputMessage("The simulation time is %.3f, velocity is: %.3f m/s", time, velocity);
         prevSec = time;
     }
     // Use the Spline class to get the car's position along the spline
