@@ -104,7 +104,7 @@ void MakeScene(void)
 	//SampleParticle* sphere1 = new SampleParticle( "sphere1" );
 	//SampleParticle* rose1 = new SampleParticle("rose1");
 	Spline* spline1 = new Spline("hermite");
-	Car* porsche = new Car("porsche");
+	Car* porsche = new Car("objectpath");
 
 	// Register systems
 	//success = GlobalResourceManager::use()->addSystem( sphere1, true );
@@ -149,7 +149,7 @@ void MakeScene(void)
 	// make sure you got it
 	assert( sampleSystemRetrieval );
 
-	sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("porsche");
+	sampleSystemRetrieval = GlobalResourceManager::use()->getSystem("objectpath");
 
 	assert(sampleSystemRetrieval);
 

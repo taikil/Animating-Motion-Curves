@@ -118,7 +118,7 @@ int Spline::setTangent(ControlPoint& a, ControlPoint& b, ControlPoint& c)
 	c.getPos(pos_C);
 	glm::dvec3 tangent = (pos_C - pos_A) / 2.0;
 	b.setTan(tangent);
-	animTcl::OutputMessage("  New tangent: %.3f %.3f %.3f", tangent.x, tangent.y, tangent.z);
+	//animTcl::OutputMessage("  New tangent: %.3f %.3f %.3f", tangent.x, tangent.y, tangent.z);
 
 	return TCL_OK;
 }
@@ -171,7 +171,7 @@ double Spline::getArcLength(const ControlPoint& p0, const ControlPoint& p1) {
 		entry.p1 = p1;
 		arcLengths.push_back(entry);
 		arcLength += deltaS;
-		animTcl::OutputMessage("  New len: %.3f, new t: %.3f", deltaS + accumulatedLength, t0);
+		//animTcl::OutputMessage("  New len: %.3f, new t: %.3f", deltaS + accumulatedLength, t0);
 	}
 
 	return arcLength;
@@ -335,13 +335,13 @@ glm::dvec3 Spline::getCarPosition(double distance) {
 	i = std::min(i, static_cast<int>(numPoints - 1));
 	ControlPoint p0 = points[i];
 	ControlPoint p1 = points[i + 1];
-	double t0 = (t - (static_cast<float>(i) / numPoints)) * numPoints;
+	double t0 = std::min((t - (static_cast<float>(i) / numPoints)) * numPoints, 1.0);
 
 	glm::dvec3 carPosition = glm::dvec3(evaluateCurve(0, t0, p0, p1),
 		evaluateCurve(1, t0, p0, p1),
 		evaluateCurve(2, t0, p0, p1));
 
-	animTcl::OutputMessage("Pos: x: %.3f, y: %.3f, t: %.3f", carPosition[0], carPosition[1], t0);
+	//animTcl::OutputMessage("Pos: x: %.3f, y: %.3f, t: %.3f", carPosition[0], carPosition[1], t0);
 	return carPosition;
 }
 
@@ -354,6 +354,8 @@ glm::dvec3 Spline::getTangents(double distance) {
 	glm::dvec3 tan0, tan1, lerpTan;
 	p0.getTan(tan0);
 	p1.getTan(tan1);
+	//tan0 = getCarPosition(distance);
+	//p1.getPos(tan1);
 	double t0 = (t - (static_cast<float>(i) / numPoints)) * numPoints;
 	lerpTan = glm::dvec3(
 		lerp(t0, tan0[0], tan1[0]),

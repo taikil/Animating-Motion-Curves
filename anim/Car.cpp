@@ -8,11 +8,11 @@ Car::Car(const std::string& name) :
 	m_pos(0, 0, 0)
 {
 	glm::quat rotationQuatI = glm::angleAxis(glm::radians(270.0), glm::dvec3(1, 0, 0)); // 90 degrees about i-axis
-	//glm::quat rotationQuatJ = glm::angleAxis(glm::radians(180.0), glm::dvec3(0, 1, 0)); // 180 degrees about j-axis
+	glm::quat rotationQuatJ = glm::angleAxis(glm::radians(180.0), glm::dvec3(0, 1, 0)); // 180 degrees about j-axis
 
 	// Combine the rotations
-	//m_rot = rotationQuatJ * rotationQuatI;
-	m_rot = rotationQuatI;
+	m_rot = rotationQuatJ * rotationQuatI;
+	//m_rot = rotationQuatI;
 
 	//m_model.ReadOBJ("../Build/data/porsche.obj");
 	m_model.ReadOBJ("../Build/data/f-16.obj");
