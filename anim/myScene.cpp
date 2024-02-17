@@ -104,7 +104,7 @@ void MakeScene(void)
 	//SampleParticle* sphere1 = new SampleParticle( "sphere1" );
 	//SampleParticle* rose1 = new SampleParticle("rose1");
 	Spline* spline1 = new Spline("hermite");
-	Car* porsche = new Car("objectpath");
+	Car* porsche = new Car("objectpath", spline1);
 
 	// Register systems
 	//success = GlobalResourceManager::use()->addSystem( sphere1, true );
@@ -196,28 +196,23 @@ void myKey(unsigned char key, int x, int y)
 Spline* g_hermiteSystem = nullptr;
 
 static int part1Command(ClientData clientData, Tcl_Interp* interp, int argc, myCONST_SPEC char** argv) {
-	if (argc != 3) {
-		animTcl::OutputMessage("Usage: part1 load <spline_path>");
+	if (argc != 1) {
+		animTcl::OutputMessage("Usage: part1");
 		return TCL_ERROR;
 	}
+	//Yeah this doesn't actually do anything but the command has the same functionality
+	animTcl::OutputMessage("Started part 1.");
+	return TCL_OK;
+}
 
-	const char* subcommand = argv[1];
-	const char* splinePath = argv[2];
-
-	if (strcmp(subcommand, "load") == 0) {
-		// Instantiate the hermite spline system
-		g_hermiteSystem = new Spline("hermite");
-
-		// Load the spline from the specified path
-		g_hermiteSystem->load(splinePath);
-
-		animTcl::OutputMessage("Loaded spline from: %s", splinePath);
-		return TCL_OK;
-	}
-	else {
-		animTcl::OutputMessage("Unknown subcommand for part1: %s", subcommand);
+static int part2Command(ClientData clientData, Tcl_Interp* interp, int argc, myCONST_SPEC char** argv) {
+	if (argc != 1) {
+		animTcl::OutputMessage("Usage: part2");
 		return TCL_ERROR;
 	}
+	//Yeah this doesn't actually do anything but the command has the same functionality
+	animTcl::OutputMessage("Started part 2.");
+	return TCL_OK;
 }
 
 static int testGlobalCommand(ClientData clientData, Tcl_Interp *interp, int argc, myCONST_SPEC char **argv)
@@ -237,6 +232,8 @@ void mySetScriptCommands(Tcl_Interp *interp)
 	Tcl_CreateCommand(interp, "test", testGlobalCommand, (ClientData) NULL,
 					  (Tcl_CmdDeleteProc *)	NULL);
 	Tcl_CreateCommand(interp, "part1", part1Command, (ClientData) NULL,
+					  (Tcl_CmdDeleteProc *)	NULL);
+	Tcl_CreateCommand(interp, "part2", part1Command, (ClientData) NULL,
 					  (Tcl_CmdDeleteProc *)	NULL);
 
 }	// mySetScriptCommands

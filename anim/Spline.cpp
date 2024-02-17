@@ -483,6 +483,8 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 			}
 			new_pos = glm::dvec3(atof(argv[3]), atof(argv[4]), atof(argv[5]));
 			points[index].setPos(new_pos);
+			//Redraw
+			initHermite();
 		}
 		else
 		{
@@ -501,8 +503,10 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 				animTcl::OutputMessage(" Error: Index out of range");
 				return TCL_ERROR;
 			}
-			new_tan = glm::dvec3(atof(argv[4]), atof(argv[5]), atof(argv[6]));
+			new_tan = glm::dvec3(atof(argv[3]), atof(argv[4]), atof(argv[5]));
 			points[index].setTan(new_tan);
+			//Redraw
+			initHermite();
 		}
 		else
 		{
@@ -515,7 +519,7 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 		// Check if the correct number of arguments is provided
 		if (argc != 8)
 		{
-			animTcl::OutputMessage("Usage: <name> add point <n> <p1[x] p1[y] p1[z] s1[x] s1[y] s1[z]> ... <pn[x] pn[y] pn[z] pn[x] sn[y] sn[z]>");
+			animTcl::OutputMessage("Usage: <name> add point <n> <p1[x] p1[y] p1[z]");
 			return TCL_ERROR;
 		}
 
@@ -532,6 +536,9 @@ int Spline::command(int argc, myCONST_SPEC char** argv)
 
 		// Add the point to the spline
 		addPoint(new_pos, new_tan);
+
+		//Redraw
+		initHermite();
 
 		// Output a success message
 		animTcl::OutputMessage("Added point");

@@ -1,11 +1,12 @@
 #include "Car.h"
 
-Car::Car(const std::string& name) :
+Car::Car(const std::string& name, Spline* spline) :
 	BaseSystem(name),
 	m_sx(1.0f),
 	m_sy(1.0f),
 	m_sz(1.0f),
-	m_pos(0, 0, 0)
+	m_pos(0, 0, 0),
+	m_spline(spline)  // Add a member variable to store the spline
 {
 	glm::quat rotationQuatI = glm::angleAxis(glm::radians(270.0), glm::dvec3(1, 0, 0)); // 90 degrees about i-axis
 	glm::quat rotationQuatJ = glm::angleAxis(glm::radians(180.0), glm::dvec3(0, 1, 0)); // 180 degrees about j-axis
@@ -150,6 +151,19 @@ int Car::command(int argc, myCONST_SPEC char** argv)
 		return TCL_OK;
 
 	}
+	else if (strcmp(argv[0], "load") == 0)
+	{
+		if (argc == 2)
+		{
+			return m_spline->load(argv[1]);
+		}
+		else
+		{
+			animTcl::OutputMessage("Usage: system <name> load \"<file name>\"");
+			return TCL_ERROR;
+		}
+	}
+
 	else if (strcmp(argv[0], "reset") == 0)
 	{
 		reset(0);

@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <util/util.h>
 #include "animTcl.h"
+#include "Spline.h"
 #include <GLmodel/GLmodel.h>
 
 #include <glm/glm.hpp>
@@ -21,7 +22,7 @@ class Car : public BaseSystem
 {
 
 public:
-	Car(const std::string& name);
+	Car(const std::string& name, Spline* spline);
 	virtual void getState(double* p);
 	virtual void setState(double* p);
 	void reset(double time);
@@ -45,6 +46,7 @@ protected:
 	glm::dvec3 m_pos;
 
 	GLMmodel m_model;
+	Spline* m_spline;
 
 };
 #endif
